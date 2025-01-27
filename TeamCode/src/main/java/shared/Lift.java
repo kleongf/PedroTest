@@ -9,6 +9,7 @@ public class Lift {
     public static double p = 0.05, i = 0.02, d = 0.001;
     public static double f = 0;
     public static double target = 150;
+    // keep testing offset
     private static double offset = 150;
     private final DcMotorEx motorOne;
     private final DcMotorEx motorTwo;
@@ -17,6 +18,7 @@ public class Lift {
     // for future reference: maybe put all constants together in a separate class?
     private static int UP = 240;
     private static int DOWN = 145;
+    // set default to offset
     private static int DEFAULT = 150;
 
     public Lift(DcMotorEx motorOne, DcMotorEx motorTwo, AnalogInput encoder) {

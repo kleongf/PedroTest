@@ -38,18 +38,14 @@ public class Intake {
     }
 
     public void IntakeUp() {
-        motorOne.setPosition(0);
-        motorTwo.setPosition(0);
-    }
-
-    public void IntakeDown() {
         motorOne.setPosition(0.7);
         motorTwo.setPosition(0.7);
     }
 
-    public void IntakeDefault() {
+    public void IntakeDown() {
         motorOne.setPosition(0.4);
-        motorOne.setPosition(0.4);
+        motorTwo.setPosition(0.4);
     }
+
 }
 

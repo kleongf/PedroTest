@@ -94,9 +94,7 @@ public class MainTeleop extends OpMode {
     Left bumper: retract
         if angle > 160, then we do retract first then lift down
         if angle < 160, then we do lift down first then retract
-    TODO:
     Left stick button: Intake (forward)
-    TODO:
     Right stick button: Outtake (up, reverse, down)
     Left stick: Extension clipping
     Right stick: Angle clipping
@@ -118,7 +116,7 @@ public class MainTeleop extends OpMode {
                     actionTimer.reset();
                     liftState = LiftState.LIFT_UP_LOW;
                 } else if (gamepad1.left_bumper && !leftBumperPressed) {
-                    if ((((analogEncoder.getVoltage() / 3.2 * 360) + 145) % 360) > 170) {
+                    if (lift.getTarget() > 170) {
                         extend.setTarget(EXTEND_ZERO);
                         actionTimer.reset();
                         liftState = LiftState.EXTEND_RETRACT;
@@ -207,7 +205,7 @@ public class MainTeleop extends OpMode {
         // joystick: trying new stuff instead of shart's old stuff
         double armLengthInput = gamepad1.left_stick_y;
         telemetry.addData("left stick", armLengthInput);
-        if (Math.abs(armLengthInput) > 0.1) {
+        if (Math.abs(armLengthInput) > 0.3) {
 //            extendMotorOne.setPower(armLengthInput * 0.9);
 //            extendMotorTwo.setPower(armLengthInput * 0.9);
 
@@ -220,7 +218,7 @@ public class MainTeleop extends OpMode {
 
         double armAngleInput = gamepad1.right_stick_y;
         telemetry.addData("right stick", armAngleInput);
-        if (Math.abs(armAngleInput) > 0.1) {
+        if (Math.abs(armAngleInput) > 0.3) {
 //            liftMotorOne.setPower(armAngleInput * 0.2);
 //            liftMotorTwo.setPower(armAngleInput * 0.2);
             if (armAngleInput > 0) {
