@@ -223,7 +223,7 @@ public class MainTeleop extends OpMode {
         if (Math.abs(armAngleInput) > 0.1) {
 //            liftMotorOne.setPower(armAngleInput * 0.2);
 //            liftMotorTwo.setPower(armAngleInput * 0.2);
-            if (armLengthInput > 0) {
+            if (armAngleInput > 0) {
                 lift.setTarget(lift.getTarget() + 0.1);
             } else {
                 lift.setTarget(lift.getTarget() - 0.1);
