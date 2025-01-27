@@ -1,0 +1,54 @@
+package tests;
+
+import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.CRServo;
+import com.qualcomm.robotcore.hardware.Servo;
+import shared.Intake;
+
+@TeleOp(name="Intake Testing")
+public class IntakeTesting extends OpMode {
+    public Servo rotateMotorOne;
+    public Servo rotateMotorTwo;
+    public CRServo intakeMotor;
+
+    Intake intake;
+
+    // using dpad controls to test
+    private boolean dpadUpPressed = false;
+    private boolean dpadDownPressed = false;
+    private boolean dpadLeftPressed = false;
+    private boolean dpadRightPressed = false;
+
+    public void init() {
+        rotateMotorOne = hardwareMap.get(Servo.class, "rotateMotorOne");
+        rotateMotorTwo = hardwareMap.get(Servo.class, "rotateMotorTwo");
+        intakeMotor = hardwareMap.get(CRServo.class, "intakeMotor");
+        intake = new Intake(rotateMotorOne, rotateMotorTwo, intakeMotor);
+    }
+
+    public void loop() {
+        if (gamepad1.dpad_up && !dpadUpPressed) {
+            intake.IntakeUp();
+        }
+
+        if (gamepad1.dpad_down && !dpadDownPressed) {
+            intake.IntakeDown();
+        }
+
+        if (gamepad1.dpad_left && !dpadLeftPressed) {
+            intake.setPower(0.5);
+        }
+
+        if (gamepad1.dpad_right && !dpadRightPressed) {
+            intake.setPower(-0.5);
+        }
+        dpadRightPressed = gamepad1.dpad_right;
+        dpadLeftPressed = gamepad1.dpad_left;
+        dpadUpPressed = gamepad1.dpad_up;
+        dpadDownPressed = gamepad1.dpad_down;
+
+        intake.loop();
+    }
+}
+
