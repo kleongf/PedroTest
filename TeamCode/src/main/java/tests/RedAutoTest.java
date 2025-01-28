@@ -111,13 +111,21 @@ public class RedAutoTest extends OpMode {
                 TODO: maybe here we reset
                 if (follower.isBusy()) {
                     actionTimer.resetTimer();
+                    // maybe if we wanna save time here
+                    // we can lift up and extend now, but i think we should play safe and omit
+                    // this for now
+                    lift.setTarget(700)
+                    extend.setTarget(240)
                 }
+
                 */
 
                 /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the scorePose's position */
                 if(!follower.isBusy()) {
                     /* Score Preload */
                     /* TODO: outtake sample
+
+
                     if (actionTimer.getElapsedTimeSeconds() < 0.3) {
                         lift.setTarget(240)
                     } else if (actionTimer.getElapsedTimeSeconds() < 0.6) {

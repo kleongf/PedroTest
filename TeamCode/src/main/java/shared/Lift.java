@@ -6,20 +6,15 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 
 public class Lift {
     private final PIDController controller;
-    public static double p = 0.05, i = 0.02, d = 0.001;
-    public static double f = 0;
-    public static double target = 150;
+    public static double p = 0.03, i = 0.02, d = 0.001;
+    public static double f = 0.001;
+    public static double target = 90;
     // keep testing offset
-    private static double offset = 150;
+    private static double offset = 90;
+    private static double inherentOffset = 0;
     private final DcMotorEx motorOne;
     private final DcMotorEx motorTwo;
     private final AnalogInput encoder;
-
-    // for future reference: maybe put all constants together in a separate class?
-    private static int UP = 240;
-    private static int DOWN = 145;
-    // set default to offset
-    private static int DEFAULT = 150;
 
     public Lift(DcMotorEx motorOne, DcMotorEx motorTwo, AnalogInput encoder) {
         controller = new PIDController(p, i, d);
@@ -30,17 +25,17 @@ public class Lift {
     }
 
     public void setTarget(double t) {
-        if (t >= 250) {
-            target = 250;
-        } else target = Math.max(t, 143);
+        if (t >= 190) {
+            target = 190;
+        } else target = Math.max(t, 83);
     }
 
     public double getTarget() { return target; }
 
     public void loop() {
-        double armPos = ((encoder.getVoltage() / 3.2 * 360) + offset) % 360;
+        double armPos = ((encoder.getVoltage() / 3.235 * 360) + offset + inherentOffset) % 360;
         double pid = controller.calculate(armPos, target);
-        double ff = Math.cos(Math.toRadians(armPos)) * f;
+        double ff = Math.cos(Math.toRadians((encoder.getVoltage() / 3.235 * 360))) * f;
         double power = pid + ff;
         motorOne.setPower(-power);
         motorTwo.setPower(-power);

@@ -30,14 +30,16 @@ public class IntakeTesting extends OpMode {
     public void loop() {
         if (gamepad1.dpad_up && !dpadUpPressed) {
             intake.IntakeUp();
+            // seems to be moving it down. also make the angle less down by 0.1
         }
 
         if (gamepad1.dpad_down && !dpadDownPressed) {
             intake.IntakeDown();
+            // moves it up, but not high enough
         }
 
         if (gamepad1.dpad_left && !dpadLeftPressed) {
-            intake.setPower(0.5);
+            intake.setPower(0.5); // outtake
         }
 
         if (gamepad1.dpad_right && !dpadRightPressed) {

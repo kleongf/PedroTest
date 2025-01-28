@@ -13,8 +13,8 @@ public class Intake {
         this.motorOne = motorOne;
         this.motorTwo = motorTwo;
         this.intakeMotor = intakeMotor;
-        motorOne.setPosition(0);
-        motorTwo.setPosition(0);
+        motorOne.setPosition(0.22);
+        motorTwo.setPosition(0.22);
     }
 
     public void setPower(double p) {
@@ -38,13 +38,13 @@ public class Intake {
     }
 
     public void IntakeUp() {
-        motorOne.setPosition(0.7);
-        motorTwo.setPosition(0.7);
+        motorOne.setPosition(0.8);
+        motorTwo.setPosition(0.8);
     }
 
     public void IntakeDown() {
-        motorOne.setPosition(0.4);
-        motorTwo.setPosition(0.4);
+        motorOne.setPosition(0.22);
+        motorTwo.setPosition(0.22);
     }
 
 }

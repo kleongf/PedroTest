@@ -8,7 +8,7 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import shared.Extend;
 import shared.Lift;
 
-@TeleOp(name="Intake Testing")
+@TeleOp(name="Hang Testing")
 public class HangTesting extends OpMode {
     public DcMotorEx liftMotorOne;
     public DcMotorEx liftMotorTwo;
