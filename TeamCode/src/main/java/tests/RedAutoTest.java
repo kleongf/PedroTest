@@ -11,21 +11,31 @@ import com.pedropathing.pathgen.Path;
 import com.pedropathing.pathgen.PathChain;
 import com.pedropathing.pathgen.Point;
 import com.pedropathing.util.Timer;
+import com.qualcomm.robotcore.hardware.AnalogInput;
+import com.qualcomm.robotcore.hardware.CRServo;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.Servo;
+
 import pedroPathing.constants.FConstants;
 import pedroPathing.constants.LConstants;
+import shared.Extend;
+import shared.Intake;
+import shared.Lift;
 
+// other idea: we can move arm and pivot while driving?
 @Autonomous(name = "Autonomous Red Testing")
 public class RedAutoTest extends OpMode {
     private Follower follower;
     private Timer pathTimer, actionTimer, opmodeTimer;
     private int pathState;
 
+
     /** Start Pose of our robot */
     private final Pose startPose = new Pose(135, 36, Math.toRadians(180));
 
     /** Scoring Pose of our robot. It is facing the submersible at a -45 degree (315 degree) angle. */
     private final Pose scorePose = new Pose(124.5, 19.5, Math.toRadians(135));
-
+    // these seem a bit sketch i will check them
     /** Lowest (First) Sample from the Spike Mark */
     private final Pose pickup1Pose = new Pose(102, 32, Math.toRadians(70));
 
@@ -38,6 +48,37 @@ public class RedAutoTest extends OpMode {
     private Path scorePreload, park;
     private PathChain grabPickup1, grabPickup2, grabPickup3, scorePickup1, scorePickup2, scorePickup3;
 
+    public DcMotorEx liftMotorOne;
+    public DcMotorEx liftMotorTwo;
+    public DcMotorEx extendMotorOne;
+    public DcMotorEx extendMotorTwo;
+    public Servo rotateMotorOne;
+    public Servo rotateMotorTwo;
+    public CRServo intakeMotor;
+    private AnalogInput analogEncoder;
+
+
+    Lift lift;
+    Extend extend;
+    Intake intake;
+
+    public void score() {
+        if (actionTimer.getElapsedTimeSeconds() < 0.3) {
+            lift.setTarget(180);
+        } else if (actionTimer.getElapsedTimeSeconds() < 0.6) {
+            extend.setTarget(700);
+        } else if (actionTimer.getElapsedTimeSeconds() < 0.9) {
+            intake.IntakeUp();
+        } else if (actionTimer.getElapsedTimeSeconds() < 1.2) {
+            intake.IntakeReverse();
+        } else if (actionTimer.getElapsedTimeSeconds() < 1.5) {
+            intake.IntakeDown();
+        } else if (actionTimer.getElapsedTimeSeconds() < 1.8) {
+            extend.setTarget(40);
+        } else if (actionTimer.getElapsedTimeSeconds() < 2.1) {
+            lift.setTarget(86);
+        }
+    }
     /** Build the paths for the auto (adds, for example, constant/linear headings while doing paths)
      * It is necessary to do this so that all the paths are built before the auto starts. **/
     public void buildPaths() {
@@ -49,7 +90,7 @@ public class RedAutoTest extends OpMode {
                 .addPath(
                         new BezierCurve(
                                 new Point(scorePose),
-                                new Point(111, 39, Point.CARTESIAN),
+                                new Point(111.000, 39.000, Point.CARTESIAN),
                                 new Point(pickup1Pose)
                         )
                 )
@@ -60,7 +101,7 @@ public class RedAutoTest extends OpMode {
                 .addPath(
                         new BezierCurve(
                                 new Point(pickup1Pose),
-                                new Point(111, 39, Point.CARTESIAN),
+                                new Point(111.000, 39.000, Point.CARTESIAN),
                                 new Point(scorePose)
                         )
                 )
@@ -71,7 +112,7 @@ public class RedAutoTest extends OpMode {
                 .addPath(
                         new BezierCurve(
                                 new Point(scorePose),
-                                new Point(111, 29, Point.CARTESIAN),
+                                new Point(111.000, 29.000, Point.CARTESIAN),
                                 new Point(pickup2Pose)
                         )
                 )
@@ -82,11 +123,33 @@ public class RedAutoTest extends OpMode {
                 .addPath(
                         new BezierCurve(
                                 new Point(pickup2Pose),
-                                new Point(111, 29, Point.CARTESIAN),
+                                new Point(111.000, 29.000, Point.CARTESIAN),
                                 new Point(scorePose)
                         )
                 )
                 .setLinearHeadingInterpolation(pickup2Pose.getHeading(), scorePose.getHeading())
+                .build();
+
+        grabPickup3 = follower.pathBuilder()
+                .addPath(
+                        new BezierCurve(
+                                new Point(scorePose),
+                                new Point(111.000, 19.000, Point.CARTESIAN),
+                                new Point(pickup3Pose)
+                        )
+                )
+                .setLinearHeadingInterpolation(scorePose.getHeading(), pickup3Pose.getHeading())
+                .build();
+
+        scorePickup3 = follower.pathBuilder()
+                .addPath(
+                        new BezierCurve(
+                                new Point(pickup3Pose),
+                                new Point(111.000, 19.000, Point.CARTESIAN),
+                                new Point(scorePose)
+                        )
+                )
+                .setLinearHeadingInterpolation(pickup3Pose.getHeading(), scorePose.getHeading())
                 .build();
 
 
@@ -109,55 +172,30 @@ public class RedAutoTest extends OpMode {
                 - Robot Position: "if(follower.getPose().getX() > 36) {}"
 
                 TODO: maybe here we reset
+                */
                 if (follower.isBusy()) {
                     actionTimer.resetTimer();
-                    // maybe if we wanna save time here
-                    // we can lift up and extend now, but i think we should play safe and omit
-                    // this for now
-                    lift.setTarget(700)
-                    extend.setTarget(240)
                 }
 
-                */
 
                 /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the scorePose's position */
                 if(!follower.isBusy()) {
                     /* Score Preload */
-                    /* TODO: outtake sample
-
-
-                    if (actionTimer.getElapsedTimeSeconds() < 0.3) {
-                        lift.setTarget(240)
-                    } else if (actionTimer.getElapsedTimeSeconds() < 0.6) {
-                        extend.setTarget(700)
-                    } else if (actionTimer.getElapsedTimeSeconds() < 1) {
-                        intakeUp()
-                    } else if (actionTimer.getElapsedTimeSeconds() < 1.2) {
-                        intakeReverse()
-                    } else if (actionTimer.getElapsedTimeSeconds() < 1.5) {
-                        intakeDown()
-                    } else if (actionTimer.getElapsedTimeSeconds() < 1.7) {
-                        intakeDown()
-                    } else if (actionTimer.getElapsedTimeSeconds() < 2) {
-                        extend.setTarget(100)
-                    } else if (actionTimer.getElapsedTimeSeconds() < 2.3) {
-                        lift.setTarget(145)
-                    }
-                     */
+                    score();
                     /* Since this is a pathChain, we can have Pedro hold the end point while we are grabbing the sample */
-                    // if (pathTimer.getElapsedTimeSeconds() > 2.3) {
-                    // intake.intakeForward()
-                    follower.followPath(grabPickup1,true);
-                    setPathState(2);
-                    // }
+                    if (actionTimer.getElapsedTimeSeconds() > 2.4) {
+                        intake.IntakeForward();
+                        follower.followPath(grabPickup1,true);
+                        setPathState(2);
+                    }
                 }
                 break;
             case 2:
                 /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the pickup1Pose's position */
-                // past like 1 second, reverse intake
+
                 if(!follower.isBusy()) {
                     /* Grab Sample */
-
+                    // it should automatically grab it so i guess i shouldnt worry?
                     /* Since this is a pathChain, we can have Pedro hold the end point while we are scoring the sample */
                     follower.followPath(scorePickup1,true);
                     setPathState(3);
@@ -165,19 +203,24 @@ public class RedAutoTest extends OpMode {
                 break;
             case 3:
                 /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the scorePose's position */
+                if (follower.isBusy()) {
+                    actionTimer.resetTimer();
+                }
                 if(!follower.isBusy()) {
                     /* Score Sample */
-
+                    score();
                     /* Since this is a pathChain, we can have Pedro hold the end point while we are grabbing the sample */
-                    follower.followPath(grabPickup2,true);
-                    setPathState(4);
+                    if (actionTimer.getElapsedTimeSeconds() > 2.4) {
+                        intake.IntakeForward();
+                        follower.followPath(grabPickup2, true);
+                        setPathState(4);
+                    }
                 }
                 break;
             case 4:
                 /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the pickup2Pose's position */
                 if(!follower.isBusy()) {
                     /* Grab Sample */
-
                     /* Since this is a pathChain, we can have Pedro hold the end point while we are scoring the sample */
                     follower.followPath(scorePickup2,true);
                     setPathState(5);
@@ -185,8 +228,45 @@ public class RedAutoTest extends OpMode {
                 break;
             case 5:
                 /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the scorePose's position */
+                if (follower.isBusy()) {
+                    actionTimer.resetTimer();
+                }
                 if(!follower.isBusy()) {
-                    /* Level 1 Ascent */
+                    /* Score Sample */
+                    score();
+                    /* Since this is a pathChain, we can have Pedro hold the end point while we are grabbing the sample */
+                    if (actionTimer.getElapsedTimeSeconds() > 2.4) {
+                        intake.IntakeForward();
+                        follower.followPath(grabPickup3, true);
+                        setPathState(6);
+                    }
+                }
+                break;
+            case 6:
+                if(!follower.isBusy()) {
+                    /* Grab Sample */
+                    /* Since this is a pathChain, we can have Pedro hold the end point while we are scoring the sample */
+                    follower.followPath(scorePickup3,true);
+                    setPathState(7);
+                }
+                break;
+            case 7:
+                if (follower.isBusy()) {
+                    actionTimer.resetTimer();
+                }
+                if(!follower.isBusy()) {
+                    /* Score Sample */
+                    score();
+                    /* Since this is a pathChain, we can have Pedro hold the end point while we are grabbing the sample */
+                    if (actionTimer.getElapsedTimeSeconds() > 2.4) {
+                        setPathState(8);
+                    }
+                }
+                break;
+            case 8:
+                /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the scorePose's position */
+                if(!follower.isBusy()) {
+                    /* TODO: PARK IN WHITE LINE */
 
                     /* Set the state to a Case we won't use or define, so it just stops running an new paths */
                     setPathState(-1);
@@ -210,11 +290,16 @@ public class RedAutoTest extends OpMode {
         follower.update();
         autonomousPathUpdate();
 
+        intake.loop();
+        lift.loop();
+        extend.loop();
+
         // Feedback to Driver Hub
         telemetry.addData("path state", pathState);
         telemetry.addData("x", follower.getPose().getX());
         telemetry.addData("y", follower.getPose().getY());
         telemetry.addData("heading", follower.getPose().getHeading());
+        telemetry.addData("busy", follower.isBusy());
         telemetry.update();
     }
 
@@ -223,7 +308,21 @@ public class RedAutoTest extends OpMode {
     public void init() {
         pathTimer = new Timer();
         opmodeTimer = new Timer();
+        actionTimer = new Timer();
         opmodeTimer.resetTimer();
+
+        liftMotorOne = hardwareMap.get(DcMotorEx.class, "liftMotorOne");
+        liftMotorTwo = hardwareMap.get(DcMotorEx.class, "liftMotorTwo");
+        analogEncoder = hardwareMap.get(AnalogInput.class, "encoder");
+        extendMotorOne = hardwareMap.get(DcMotorEx.class, "extendMotorOne");
+        extendMotorTwo = hardwareMap.get(DcMotorEx.class, "extendMotorTwo");
+        rotateMotorOne = hardwareMap.get(Servo.class, "rotateMotorOne");
+        rotateMotorTwo = hardwareMap.get(Servo.class, "rotateMotorTwo");
+        intakeMotor = hardwareMap.get(CRServo.class, "intakeMotor");
+
+        lift = new Lift(liftMotorOne, liftMotorTwo, analogEncoder);
+        extend = new Extend(extendMotorOne, extendMotorTwo);
+        intake = new Intake(rotateMotorOne, rotateMotorTwo, intakeMotor);
 
         Constants.setConstants(FConstants.class, LConstants.class);
         follower = new Follower(hardwareMap);
@@ -248,4 +347,6 @@ public class RedAutoTest extends OpMode {
     public void stop() {
     }
 }
+
+
 
