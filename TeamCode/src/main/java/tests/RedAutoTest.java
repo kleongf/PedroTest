@@ -35,7 +35,8 @@ public class RedAutoTest extends OpMode {
 
     /** Scoring Pose of our robot. It is facing the submersible at a -45 degree (315 degree) angle. */
     private final Pose scorePose = new Pose(124.5, 19.5, Math.toRadians(135));
-    // these seem a bit sketch i will check them
+    // these seem a bit sketch i will check them, 80 deg is way better
+    // also try editing the second point
     /** Lowest (First) Sample from the Spike Mark */
     private final Pose pickup1Pose = new Pose(102, 32, Math.toRadians(70));
 

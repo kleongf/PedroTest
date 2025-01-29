@@ -15,12 +15,6 @@ public class Extend {
     private final DcMotorEx motorOne;
     private final DcMotorEx motorTwo;
 
-    // for future reference: maybe put all constants together in a separate class?
-    private static int HIGH = 700;
-    private static int LOW = 300;
-    private static int ZERO = 0;
-    private static int DEFAULT = 100;
-
     public Extend(DcMotorEx motorOne, DcMotorEx motorTwo) {
         controller = new PIDController(p, i, d);
         controller.setPID(p, i, d);
