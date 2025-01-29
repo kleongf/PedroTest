@@ -39,11 +39,11 @@ public class IntakeTesting extends OpMode {
         }
 
         if (gamepad1.dpad_left && !dpadLeftPressed) {
-            intake.setPower(0.5); // outtake
+            intake.IntakeReverse(); // outtake
         }
 
         if (gamepad1.dpad_right && !dpadRightPressed) {
-            intake.setPower(-0.5);
+            intake.IntakeForward();
         }
         dpadRightPressed = gamepad1.dpad_right;
         dpadLeftPressed = gamepad1.dpad_left;

@@ -2,6 +2,7 @@ package shared;
 
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
 public class Intake {
     private final Servo motorOne;
@@ -13,8 +14,8 @@ public class Intake {
         this.motorOne = motorOne;
         this.motorTwo = motorTwo;
         this.intakeMotor = intakeMotor;
-        motorOne.setPosition(0.22);
-        motorTwo.setPosition(0.22);
+        motorOne.setPosition(0.8);
+        motorTwo.setPosition(0.8);
     }
 
     public void setPower(double p) {
@@ -22,11 +23,11 @@ public class Intake {
     }
 
     public void IntakeForward() {
-        power = -0.5;
+        power = -0.3;
     }
 
     public void IntakeReverse() {
-        power = 0.5;
+        power = 0.3;
     }
 
     public void IntakeStop() {
@@ -35,6 +36,7 @@ public class Intake {
 
     public void loop() {
         intakeMotor.setPower(power);
+
     }
 
     public void IntakeUp() {
@@ -43,6 +45,7 @@ public class Intake {
     }
 
     public void IntakeDown() {
+        // was 0.22
         motorOne.setPosition(0.22);
         motorTwo.setPosition(0.22);
     }

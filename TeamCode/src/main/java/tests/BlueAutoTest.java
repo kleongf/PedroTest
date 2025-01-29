@@ -11,10 +11,18 @@ import com.pedropathing.pathgen.Path;
 import com.pedropathing.pathgen.PathChain;
 import com.pedropathing.pathgen.Point;
 import com.pedropathing.util.Timer;
+import com.qualcomm.robotcore.hardware.AnalogInput;
+import com.qualcomm.robotcore.hardware.CRServo;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.Servo;
+
 import pedroPathing.constants.FConstants;
 import pedroPathing.constants.LConstants;
+import shared.Extend;
+import shared.Intake;
+import shared.Lift;
 
-// other idea: we can move arrm and pivot while driving?
+// other idea: we can move arm and pivot while driving?
 @Autonomous(name = "Autonomous Blue Testing")
 public class BlueAutoTest extends OpMode {
     private Follower follower;
@@ -28,16 +36,34 @@ public class BlueAutoTest extends OpMode {
     private final Pose scorePose = new Pose(19.5, 124.5, Math.toRadians(-45));
 
     /** Lowest (First) Sample from the Spike Mark */
-    private final Pose pickup1Pose = new Pose(42, 112, Math.toRadians(70));
+    private final Pose pickup1Pose = new Pose(42, 112, Math.toRadians(80));
 
-    private final Pose pickup2Pose = new Pose(42, 122, Math.toRadians(70));
+    private final Pose pickup2Pose = new Pose(42, 122, Math.toRadians(80));
 
-    private final Pose pickup3Pose = new Pose(42, 132, Math.toRadians(70));
+    private final Pose pickup3Pose = new Pose(42, 132, Math.toRadians(80));
 
     /* These are our Paths and PathChains that we will define in buildPaths() */
     // it seems like the first and last paths should be paths, not chains.
     private Path scorePreload, park;
     private PathChain grabPickup1, grabPickup2, grabPickup3, scorePickup1, scorePickup2, scorePickup3;
+
+    public DcMotorEx liftMotorOne;
+    public DcMotorEx liftMotorTwo;
+    public DcMotorEx extendMotorOne;
+    public DcMotorEx extendMotorTwo;
+    public Servo rotateMotorOne;
+    public Servo rotateMotorTwo;
+    public CRServo intakeMotor;
+    private AnalogInput analogEncoder;
+
+    private DcMotorEx frontLeft;
+    private DcMotorEx backLeft;
+    private DcMotorEx frontRight;
+    private DcMotorEx backRight;
+
+    Lift lift;
+    Extend extend;
+    Intake intake;
 
     /** Build the paths for the auto (adds, for example, constant/linear headings while doing paths)
      * It is necessary to do this so that all the paths are built before the auto starts. **/
@@ -90,6 +116,28 @@ public class BlueAutoTest extends OpMode {
                 .setLinearHeadingInterpolation(pickup2Pose.getHeading(), scorePose.getHeading())
                 .build();
 
+        grabPickup3 = follower.pathBuilder()
+                .addPath(
+                        new BezierCurve(
+                                new Point(scorePose),
+                                new Point(31.000, 125.000, Point.CARTESIAN),
+                                new Point(pickup3Pose)
+                        )
+                )
+                .setLinearHeadingInterpolation(scorePose.getHeading(), pickup3Pose.getHeading())
+                .build();
+
+        scorePickup3 = follower.pathBuilder()
+                .addPath(
+                        new BezierCurve(
+                                new Point(pickup3Pose),
+                                new Point(31.000, 125.000, Point.CARTESIAN),
+                                new Point(scorePose)
+                        )
+                )
+                .setLinearHeadingInterpolation(pickup3Pose.getHeading(), scorePose.getHeading())
+                .build();
+
 
         /* This is our park path. We are using a BezierCurve with 3 points, which is a curved line that is curved based off of the control point */
 //        park = new Path(new BezierCurve(new Point(scorePose), /* Control Point */ new Point(parkControlPose), new Point(parkPose)));
@@ -110,47 +158,44 @@ public class BlueAutoTest extends OpMode {
                 - Robot Position: "if(follower.getPose().getX() > 36) {}"
 
                 TODO: maybe here we reset
+                */
                 if (follower.isBusy()) {
                     actionTimer.resetTimer();
                 }
-                */
+
 
                 /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the scorePose's position */
                 if(!follower.isBusy()) {
                     /* Score Preload */
-                    /* TODO: outtake sample
                     if (actionTimer.getElapsedTimeSeconds() < 0.3) {
-                        lift.setTarget(240)
+                        lift.setTarget(180);
                     } else if (actionTimer.getElapsedTimeSeconds() < 0.6) {
-                        extend.setTarget(700)
-                    } else if (actionTimer.getElapsedTimeSeconds() < 1) {
-                        intakeUp()
+                        extend.setTarget(700);
+                    } else if (actionTimer.getElapsedTimeSeconds() < 0.9) {
+                        intake.IntakeUp();
                     } else if (actionTimer.getElapsedTimeSeconds() < 1.2) {
-                        intakeReverse()
+                        intake.IntakeReverse();
                     } else if (actionTimer.getElapsedTimeSeconds() < 1.5) {
-                        intakeDown()
-                    } else if (actionTimer.getElapsedTimeSeconds() < 1.7) {
-                        intakeDown()
-                    } else if (actionTimer.getElapsedTimeSeconds() < 2) {
-                        extend.setTarget(100)
-                    } else if (actionTimer.getElapsedTimeSeconds() < 2.3) {
-                        lift.setTarget(145)
+                        intake.IntakeDown();
+                    } else if (actionTimer.getElapsedTimeSeconds() < 1.8) {
+                        extend.setTarget(40);
+                    } else if (actionTimer.getElapsedTimeSeconds() < 2.1) {
+                        lift.setTarget(86);
                     }
-                     */
                     /* Since this is a pathChain, we can have Pedro hold the end point while we are grabbing the sample */
-                    // if (pathTimer.getElapsedTimeSeconds() > 2.3) {
-                    // intake.intakeForward()
-                    follower.followPath(grabPickup1,true);
-                    setPathState(2);
-                    // }
+                    if (actionTimer.getElapsedTimeSeconds() > 2.4) {
+                        intake.IntakeForward();
+                        follower.followPath(grabPickup1,true);
+                        setPathState(2);
+                    }
                 }
                 break;
             case 2:
                 /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the pickup1Pose's position */
-                // past like 1 second, reverse intake
+
                 if(!follower.isBusy()) {
                     /* Grab Sample */
-
+                    // it should automatically grab it so i guess i shouldnt worry?
                     /* Since this is a pathChain, we can have Pedro hold the end point while we are scoring the sample */
                     follower.followPath(scorePickup1,true);
                     setPathState(3);
@@ -158,19 +203,38 @@ public class BlueAutoTest extends OpMode {
                 break;
             case 3:
                 /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the scorePose's position */
+                if (follower.isBusy()) {
+                    actionTimer.resetTimer();
+                }
                 if(!follower.isBusy()) {
                     /* Score Sample */
-
+                    if (actionTimer.getElapsedTimeSeconds() < 0.3) {
+                        lift.setTarget(180);
+                    } else if (actionTimer.getElapsedTimeSeconds() < 0.6) {
+                        extend.setTarget(700);
+                    } else if (actionTimer.getElapsedTimeSeconds() < 0.9) {
+                        intake.IntakeUp();
+                    } else if (actionTimer.getElapsedTimeSeconds() < 1.2) {
+                        intake.IntakeReverse();
+                    } else if (actionTimer.getElapsedTimeSeconds() < 1.5) {
+                        intake.IntakeDown();
+                    } else if (actionTimer.getElapsedTimeSeconds() < 1.8) {
+                        extend.setTarget(40);
+                    } else if (actionTimer.getElapsedTimeSeconds() < 2.1) {
+                        lift.setTarget(86);
+                    }
                     /* Since this is a pathChain, we can have Pedro hold the end point while we are grabbing the sample */
-                    follower.followPath(grabPickup2,true);
-                    setPathState(4);
+                    if (actionTimer.getElapsedTimeSeconds() > 2.4) {
+                        intake.IntakeForward();
+                        follower.followPath(grabPickup2, true);
+                        setPathState(4);
+                    }
                 }
                 break;
             case 4:
                 /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the pickup2Pose's position */
                 if(!follower.isBusy()) {
                     /* Grab Sample */
-
                     /* Since this is a pathChain, we can have Pedro hold the end point while we are scoring the sample */
                     follower.followPath(scorePickup2,true);
                     setPathState(5);
@@ -178,6 +242,71 @@ public class BlueAutoTest extends OpMode {
                 break;
             case 5:
                 /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the scorePose's position */
+                if (follower.isBusy()) {
+                    actionTimer.resetTimer();
+                }
+                if(!follower.isBusy()) {
+                    /* Score Sample */
+                    if (actionTimer.getElapsedTimeSeconds() < 0.3) {
+                        lift.setTarget(180);
+                    } else if (actionTimer.getElapsedTimeSeconds() < 0.6) {
+                        extend.setTarget(700);
+                    } else if (actionTimer.getElapsedTimeSeconds() < 0.9) {
+                        intake.IntakeUp();
+                    } else if (actionTimer.getElapsedTimeSeconds() < 1.2) {
+                        intake.IntakeReverse();
+                    } else if (actionTimer.getElapsedTimeSeconds() < 1.5) {
+                        intake.IntakeDown();
+                    } else if (actionTimer.getElapsedTimeSeconds() < 1.8) {
+                        extend.setTarget(40);
+                    } else if (actionTimer.getElapsedTimeSeconds() < 2.1) {
+                        lift.setTarget(86);
+                    }
+                    /* Since this is a pathChain, we can have Pedro hold the end point while we are grabbing the sample */
+                    if (actionTimer.getElapsedTimeSeconds() > 2.4) {
+                        intake.IntakeForward();
+                        follower.followPath(grabPickup3, true);
+                        setPathState(6);
+                    }
+                }
+                break;
+            case 6:
+                if(!follower.isBusy()) {
+                    /* Grab Sample */
+                    /* Since this is a pathChain, we can have Pedro hold the end point while we are scoring the sample */
+                    follower.followPath(scorePickup3,true);
+                    setPathState(7);
+                }
+                break;
+            case 7:
+                if (follower.isBusy()) {
+                    actionTimer.resetTimer();
+                }
+                if(!follower.isBusy()) {
+                    /* Score Sample */
+                    if (actionTimer.getElapsedTimeSeconds() < 0.3) {
+                        lift.setTarget(180);
+                    } else if (actionTimer.getElapsedTimeSeconds() < 0.6) {
+                        extend.setTarget(700);
+                    } else if (actionTimer.getElapsedTimeSeconds() < 0.9) {
+                        intake.IntakeUp();
+                    } else if (actionTimer.getElapsedTimeSeconds() < 1.2) {
+                        intake.IntakeReverse();
+                    } else if (actionTimer.getElapsedTimeSeconds() < 1.5) {
+                        intake.IntakeDown();
+                    } else if (actionTimer.getElapsedTimeSeconds() < 1.8) {
+                        extend.setTarget(40);
+                    } else if (actionTimer.getElapsedTimeSeconds() < 2.1) {
+                        lift.setTarget(86);
+                    }
+                    /* Since this is a pathChain, we can have Pedro hold the end point while we are grabbing the sample */
+                    if (actionTimer.getElapsedTimeSeconds() > 2.4) {
+                        setPathState(8);
+                    }
+                }
+                break;
+            case 8:
+            /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the scorePose's position */
                 if(!follower.isBusy()) {
                     /* Level 1 Ascent */
 
@@ -203,11 +332,16 @@ public class BlueAutoTest extends OpMode {
         follower.update();
         autonomousPathUpdate();
 
+        intake.loop();
+        lift.loop();
+        extend.loop();
+
         // Feedback to Driver Hub
         telemetry.addData("path state", pathState);
         telemetry.addData("x", follower.getPose().getX());
         telemetry.addData("y", follower.getPose().getY());
         telemetry.addData("heading", follower.getPose().getHeading());
+        telemetry.addData("busy", follower.isBusy());
         telemetry.update();
     }
 
@@ -216,7 +350,25 @@ public class BlueAutoTest extends OpMode {
     public void init() {
         pathTimer = new Timer();
         opmodeTimer = new Timer();
+        actionTimer = new Timer();
         opmodeTimer.resetTimer();
+
+        liftMotorOne = hardwareMap.get(DcMotorEx.class, "liftMotorOne");
+        liftMotorTwo = hardwareMap.get(DcMotorEx.class, "liftMotorTwo");
+        analogEncoder = hardwareMap.get(AnalogInput.class, "encoder");
+        extendMotorOne = hardwareMap.get(DcMotorEx.class, "extendMotorOne");
+        extendMotorTwo = hardwareMap.get(DcMotorEx.class, "extendMotorTwo");
+        rotateMotorOne = hardwareMap.get(Servo.class, "rotateMotorOne");
+        rotateMotorTwo = hardwareMap.get(Servo.class, "rotateMotorTwo");
+        intakeMotor = hardwareMap.get(CRServo.class, "intakeMotor");
+        frontLeft = hardwareMap.get(DcMotorEx.class, "left_front");
+        frontRight = hardwareMap.get(DcMotorEx.class, "right_front");
+        backLeft = hardwareMap.get(DcMotorEx.class, "left_back");
+        backRight = hardwareMap.get(DcMotorEx.class, "right_back");
+
+        lift = new Lift(liftMotorOne, liftMotorTwo, analogEncoder);
+        extend = new Extend(extendMotorOne, extendMotorTwo);
+        intake = new Intake(rotateMotorOne, rotateMotorTwo, intakeMotor);
 
         Constants.setConstants(FConstants.class, LConstants.class);
         follower = new Follower(hardwareMap);

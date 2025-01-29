@@ -26,8 +26,6 @@ public class MainTeleop extends OpMode {
     public enum IntakeState {
         INTAKE_START,
         INTAKE_UP,
-        INTAKE_DOWN,
-        INTAKE_REVERSE,
         INTAKE_LIFT_DOWN
     }
 
@@ -53,8 +51,8 @@ public class MainTeleop extends OpMode {
     Intake intake;
 
     public int LIFT_UP = 180;
+    // was 92
     public int LIFT_ZERO = 92;
-    public int LIFT_OUT = 92;
 
     public int EXTEND_HIGH = 700;
     public int EXTEND_ZERO = 0;
@@ -70,7 +68,6 @@ public class MainTeleop extends OpMode {
     private boolean leftBumperPressed = false;
     private boolean crossPressed = false;
     private boolean leftTriggerPressed = false;
-    private boolean rightBumperPressed = false;
     private boolean dpadUpPressed = false;
     private boolean dpadDownPressed = false;
 
@@ -105,8 +102,6 @@ public class MainTeleop extends OpMode {
 
     Righgt trigger high bucket (done)
     Right button specmin place (can't do specimen rn, skipping)
-
-    Right bumper: lift down to block
      */
 
     public void loop() {
@@ -122,7 +117,7 @@ public class MainTeleop extends OpMode {
                         actionTimer.reset();
                         liftState = LiftState.EXTEND_RETRACT;
                     } else {
-                        lift.setTarget(LIFT_OUT);
+                        lift.setTarget(LIFT_ZERO);
                         actionTimer.reset();
                         liftState = LiftState.LIFT_DOWN;
                     }
@@ -177,6 +172,7 @@ public class MainTeleop extends OpMode {
                     intakeState = IntakeState.INTAKE_LIFT_DOWN;
                 } else if (gamepad1.right_stick_button && !rightStickPressed) {
                     intake.IntakeReverse();
+                    // then wait, then intake stop
                     intakeTimer.reset();
                     intakeState = IntakeState.INTAKE_START;
                 }
@@ -187,9 +183,9 @@ public class MainTeleop extends OpMode {
                     if (extend.getTarget() <= 350) {
                         lift.setTarget(89);
                     } else if (extend.getTarget() <= 700) {
-                        lift.setTarget(91);
+                        lift.setTarget(91.5);
                     } else {
-                        lift.setTarget(88 + 5 * (extend.getTarget() / 700.0));
+                        lift.setTarget(86 + 5 * (extend.getTarget() / 700.0));
                     }
                     intakeTimer.reset();
                     intakeState = IntakeState.INTAKE_UP;
@@ -199,25 +195,12 @@ public class MainTeleop extends OpMode {
             case INTAKE_UP:
                 if (!gamepad1.left_stick_button) {
                     intake.IntakeUp();
+                    // stop intake when its not being used
+                    intake.IntakeStop();
                     intakeTimer.reset();
                     intakeState = IntakeState.INTAKE_START;
                 }
                 break;
-
-//            case INTAKE_REVERSE:
-//                if (intakeTimer.seconds() >= 0.5) {
-//                    intakeTimer.reset();
-//                    intakeState = IntakeState.INTAKE_DOWN;
-//                }
-//                break;
-//
-//            case INTAKE_DOWN:
-//                if (intakeTimer.seconds() >= 0.3) {
-//                    intake.IntakeDown();
-//                    intakeTimer.reset();
-//                    intakeState = IntakeState.INTAKE_START;
-//                }
-//                break;
 
             default:
                 intakeState = IntakeState.INTAKE_START;
@@ -242,7 +225,6 @@ public class MainTeleop extends OpMode {
         rightStickPressed = gamepad1.right_stick_button;
         leftTriggerPressed = gamepad1.left_trigger > 0.5;
         crossPressed = gamepad1.cross;
-        rightBumperPressed = gamepad1.right_bumper;
         dpadDownPressed = gamepad1.dpad_down;
         dpadUpPressed = gamepad1.dpad_up;
 
@@ -257,6 +239,7 @@ public class MainTeleop extends OpMode {
         double frontRightPower = (y - x - rx) / denominator;
         double backRightPower = (y + x - rx) / denominator;
 
+        // slow mo
         boolean lowPower = gamepad2.left_trigger > 0.5;
 
         frontLeft.setPower(lowPower ? 0.5 * frontLeftPower : frontLeftPower);
