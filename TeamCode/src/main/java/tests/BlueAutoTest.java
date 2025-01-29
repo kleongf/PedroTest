@@ -184,7 +184,7 @@ public class BlueAutoTest extends OpMode {
                     /* Since this is a pathChain, we can have Pedro hold the end point while we are grabbing the sample */
                     if (actionTimer.getElapsedTimeSeconds() > 2.4) {
                         intake.IntakeForward();
-                        follower.followPath(grabPickup1,true);
+                        follower.followPath(grabPickup1,false);
                         setPathState(2);
                     }
                 }
@@ -211,7 +211,7 @@ public class BlueAutoTest extends OpMode {
                     /* Since this is a pathChain, we can have Pedro hold the end point while we are grabbing the sample */
                     if (actionTimer.getElapsedTimeSeconds() > 2.4) {
                         intake.IntakeForward();
-                        follower.followPath(grabPickup2, true);
+                        follower.followPath(grabPickup2, false);
                         setPathState(4);
                     }
                 }
@@ -236,7 +236,7 @@ public class BlueAutoTest extends OpMode {
                     /* Since this is a pathChain, we can have Pedro hold the end point while we are grabbing the sample */
                     if (actionTimer.getElapsedTimeSeconds() > 2.4) {
                         intake.IntakeForward();
-                        follower.followPath(grabPickup3, true);
+                        follower.followPath(grabPickup3, false);
                         setPathState(6);
                     }
                 }

@@ -1,11 +1,10 @@
 package shared;
 
+import static shared.Constants.*;
 import com.arcrobotics.ftclib.controller.PIDController;
 import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
-import com.qualcomm.robotcore.util.ElapsedTime;
-import java.util.HashMap;
 
 public class Extend {
     private PIDController controller;
@@ -31,9 +30,9 @@ public class Extend {
     }
 
     public void setTarget(int t) {
-        if (t >= 720) {
-            target = 720;
-        } else target = Math.max(t, 0);
+        if (t >= EXTEND_STOP_MAX) {
+            target = EXTEND_STOP_MAX;
+        } else target = Math.max(t, EXTEND_STOP_MIN);
     }
 
     public int getTarget() { return target; }

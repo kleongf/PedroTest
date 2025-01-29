@@ -21,6 +21,7 @@ import pedroPathing.constants.LConstants;
 import shared.Extend;
 import shared.Intake;
 import shared.Lift;
+import static shared.Constants.*;
 
 // other idea: we can move arm and pivot while driving?
 @Autonomous(name = "Autonomous Red Testing")
@@ -35,14 +36,13 @@ public class RedAutoTest extends OpMode {
 
     /** Scoring Pose of our robot. It is facing the submersible at a -45 degree (315 degree) angle. */
     private final Pose scorePose = new Pose(124.5, 19.5, Math.toRadians(135));
-    // these seem a bit sketch i will check them, 80 deg is way better
-    // also try editing the second point
+
     /** Lowest (First) Sample from the Spike Mark */
-    private final Pose pickup1Pose = new Pose(102, 32, Math.toRadians(70));
+    private final Pose pickup1Pose = new Pose(102, 32, Math.toRadians(260));
 
-    private final Pose pickup2Pose = new Pose(102, 22, Math.toRadians(70));
+    private final Pose pickup2Pose = new Pose(102, 22, Math.toRadians(260));
 
-    private final Pose pickup3Pose = new Pose(102, 12, Math.toRadians(70));
+    private final Pose pickup3Pose = new Pose(102, 12, Math.toRadians(260));
 
     /* These are our Paths and PathChains that we will define in buildPaths() */
     // it seems like the first and last paths should be paths, not chains.
@@ -58,16 +58,15 @@ public class RedAutoTest extends OpMode {
     public CRServo intakeMotor;
     private AnalogInput analogEncoder;
 
-
     Lift lift;
     Extend extend;
     Intake intake;
 
     public void score() {
         if (actionTimer.getElapsedTimeSeconds() < 0.3) {
-            lift.setTarget(180);
+            lift.setTarget(ANGLE_UP_AUTO);
         } else if (actionTimer.getElapsedTimeSeconds() < 0.6) {
-            extend.setTarget(700);
+            extend.setTarget(EXTEND_HIGH_AUTO);
         } else if (actionTimer.getElapsedTimeSeconds() < 0.9) {
             intake.IntakeUp();
         } else if (actionTimer.getElapsedTimeSeconds() < 1.2) {
@@ -75,9 +74,9 @@ public class RedAutoTest extends OpMode {
         } else if (actionTimer.getElapsedTimeSeconds() < 1.5) {
             intake.IntakeDown();
         } else if (actionTimer.getElapsedTimeSeconds() < 1.8) {
-            extend.setTarget(40);
+            extend.setTarget(EXTEND_DEFAULT_AUTO);
         } else if (actionTimer.getElapsedTimeSeconds() < 2.1) {
-            lift.setTarget(86);
+            lift.setTarget(ANGLE_DOWN_AUTO);
         }
     }
     /** Build the paths for the auto (adds, for example, constant/linear headings while doing paths)
@@ -186,7 +185,8 @@ public class RedAutoTest extends OpMode {
                     /* Since this is a pathChain, we can have Pedro hold the end point while we are grabbing the sample */
                     if (actionTimer.getElapsedTimeSeconds() > 2.4) {
                         intake.IntakeForward();
-                        follower.followPath(grabPickup1,true);
+                        // changed holdEnd to false
+                        follower.followPath(grabPickup1,false);
                         setPathState(2);
                     }
                 }
@@ -213,7 +213,7 @@ public class RedAutoTest extends OpMode {
                     /* Since this is a pathChain, we can have Pedro hold the end point while we are grabbing the sample */
                     if (actionTimer.getElapsedTimeSeconds() > 2.4) {
                         intake.IntakeForward();
-                        follower.followPath(grabPickup2, true);
+                        follower.followPath(grabPickup2, false);
                         setPathState(4);
                     }
                 }
@@ -238,7 +238,7 @@ public class RedAutoTest extends OpMode {
                     /* Since this is a pathChain, we can have Pedro hold the end point while we are grabbing the sample */
                     if (actionTimer.getElapsedTimeSeconds() > 2.4) {
                         intake.IntakeForward();
-                        follower.followPath(grabPickup3, true);
+                        follower.followPath(grabPickup3, false);
                         setPathState(6);
                     }
                 }

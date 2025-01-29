@@ -4,7 +4,7 @@ public final class Constants {
     private Constants() {}
 
     // AUTONOMOUS
-    public static final int ANGLE_DOWN_AUTO = 85;
+    public static final int ANGLE_DOWN_AUTO = 86;
     public static final int ANGLE_UP_AUTO = 180;
     public static final int EXTEND_HIGH_AUTO = 700;
     public static final int EXTEND_DEFAULT_AUTO = 40;
@@ -19,6 +19,7 @@ public final class Constants {
     public static final int EXTEND_ZERO = 0;
     public static final int EXTEND_MID = 350;
     public static final int EXTEND_MAX = 700;
+    public static final int TRIM_AMOUNT = 30;
 
     // HARD STOPS
     public static final int EXTEND_STOP_MAX = 720;

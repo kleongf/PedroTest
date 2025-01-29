@@ -1,5 +1,6 @@
 package shared;
 
+import static shared.Constants.*;
 import com.arcrobotics.ftclib.controller.PIDController;
 import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
@@ -8,9 +9,9 @@ public class Lift {
     private final PIDController controller;
     public static double p = 0.03, i = 0.02, d = 0.001;
     public static double f = 0.001;
-    public static double target = 90;
+    public static double target = ANGLE_ZERO;
     // keep testing offset
-    private static double offset = 90;
+    private static double offset = ANGLE_ZERO;
     private static double inherentOffset = 0;
     private final DcMotorEx motorOne;
     private final DcMotorEx motorTwo;
@@ -25,9 +26,9 @@ public class Lift {
     }
 
     public void setTarget(double t) {
-        if (t >= 190) {
-            target = 190;
-        } else target = Math.max(t, 83);
+        if (t >= ANGLE_STOP_MAX) {
+            target = ANGLE_STOP_MAX;
+        } else target = Math.max(t, ANGLE_STOP_MIN);
     }
 
     public double getTarget() { return target; }

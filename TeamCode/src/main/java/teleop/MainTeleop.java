@@ -7,10 +7,11 @@ import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
-
+import shared.Constants;
 import shared.Extend;
 import shared.Intake;
 import shared.Lift;
+import static shared.Constants.* ;
 
 @TeleOp(name = "Main TeleOp")
 public class MainTeleop extends OpMode {
@@ -50,14 +51,6 @@ public class MainTeleop extends OpMode {
     Extend extend;
     Intake intake;
 
-    public int LIFT_UP = 180;
-    // was 92
-    public int LIFT_ZERO = 92;
-
-    public int EXTEND_HIGH = 700;
-    public int EXTEND_ZERO = 0;
-    public int EXTEND_MID = 350;
-    public int EXTEND_MAX = 700;
 
     ElapsedTime actionTimer = new ElapsedTime();
     ElapsedTime intakeTimer = new ElapsedTime();
@@ -108,16 +101,16 @@ public class MainTeleop extends OpMode {
         switch (liftState) {
             case LIFT_START:
                 if (gamepad1.right_trigger > 0.5 && !rightTriggerPressed) {
-                    lift.setTarget(LIFT_UP);
+                    lift.setTarget(ANGLE_UP);
                     actionTimer.reset();
                     liftState = LiftState.LIFT_UP_HIGH;
                 } else if (gamepad1.cross && !crossPressed) {
-                    if (lift.getTarget() > LIFT_ZERO + 20) {
+                    if (lift.getTarget() > ANGLE_ZERO + 10) {
                         extend.setTarget(EXTEND_ZERO);
                         actionTimer.reset();
                         liftState = LiftState.EXTEND_RETRACT;
                     } else {
-                        lift.setTarget(LIFT_ZERO);
+                        lift.setTarget(ANGLE_ZERO);
                         actionTimer.reset();
                         liftState = LiftState.LIFT_DOWN;
                     }
@@ -153,7 +146,7 @@ public class MainTeleop extends OpMode {
 
             case EXTEND_RETRACT:
                 if (actionTimer.seconds() >= 0.3) {
-                    lift.setTarget(LIFT_ZERO);
+                    lift.setTarget(ANGLE_ZERO);
                     actionTimer.reset();
                     liftState = LiftState.WAIT;
                 }
@@ -180,12 +173,12 @@ public class MainTeleop extends OpMode {
 
             case INTAKE_LIFT_DOWN:
                 if (intakeTimer.seconds() >= 0.3) {
-                    if (extend.getTarget() <= 350) {
-                        lift.setTarget(89);
-                    } else if (extend.getTarget() <= 700) {
-                        lift.setTarget(91.5);
+                    if (extend.getTarget() <= EXTEND_MID) {
+                        lift.setTarget(ANGLE_MID);
+                    } else if (extend.getTarget() <= EXTEND_MAX) {
+                        lift.setTarget(ANGLE_MAX);
                     } else {
-                        lift.setTarget(86 + 5 * (extend.getTarget() / 700.0));
+                        lift.setTarget(ANGLE_STOP_MIN + 6 * (extend.getTarget() / (EXTEND_MAX * 1.0)));
                     }
                     intakeTimer.reset();
                     intakeState = IntakeState.INTAKE_UP;
@@ -208,9 +201,9 @@ public class MainTeleop extends OpMode {
 
         // dpad trimming
         if (gamepad1.dpad_up && !dpadUpPressed) {
-            extend.setTarget(extend.getTarget() + 30);
+            extend.setTarget(extend.getTarget() + TRIM_AMOUNT);
         } else if (gamepad1.dpad_down && !dpadDownPressed) {
-            extend.setTarget(extend.getTarget() - 30);
+            extend.setTarget(extend.getTarget() - TRIM_AMOUNT);
         }
 
         extend.loop();
