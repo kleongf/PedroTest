@@ -3,6 +3,8 @@ package shared;
 public final class Constants {
     private Constants() {}
 
+    // maybe we put poses in here?
+
     // AUTONOMOUS
     public static final int ANGLE_DOWN_AUTO = 86;
     public static final int ANGLE_UP_AUTO = 180;

@@ -11,7 +11,7 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 
 @Config
 @TeleOp
-public class EncoderTesting extends OpMode {
+public class PivotTesting extends OpMode {
     private PIDController controller;
     public static double p = 0.0, i = 0, d = 0.00;
     public static double f = 0;
@@ -39,8 +39,8 @@ public class EncoderTesting extends OpMode {
         double pid = controller.calculate(armPos, target);
         double ff = Math.cos(Math.toRadians((encoder.getVoltage() / 3.235 * 360))) * f;
         double power = pid + ff;
-//        motorOne.setPower(-power);
-//        motorTwo.setPower(-power);
+        motorOne.setPower(-power);
+        motorTwo.setPower(-power);
 
         telemetry.addData("pos", armPos);
         telemetry.addData("target", target);
@@ -49,5 +49,6 @@ public class EncoderTesting extends OpMode {
 
     }
 }
+
 
 
