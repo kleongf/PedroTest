@@ -56,15 +56,28 @@ public class BlueAutoTest extends OpMode {
     public CRServo intakeMotor;
     private AnalogInput analogEncoder;
 
-    private DcMotorEx frontLeft;
-    private DcMotorEx backLeft;
-    private DcMotorEx frontRight;
-    private DcMotorEx backRight;
 
     Lift lift;
     Extend extend;
     Intake intake;
 
+    public void score() {
+        if (actionTimer.getElapsedTimeSeconds() < 0.3) {
+            lift.setTarget(180);
+        } else if (actionTimer.getElapsedTimeSeconds() < 0.6) {
+            extend.setTarget(700);
+        } else if (actionTimer.getElapsedTimeSeconds() < 0.9) {
+            intake.IntakeUp();
+        } else if (actionTimer.getElapsedTimeSeconds() < 1.2) {
+            intake.IntakeReverse();
+        } else if (actionTimer.getElapsedTimeSeconds() < 1.5) {
+            intake.IntakeDown();
+        } else if (actionTimer.getElapsedTimeSeconds() < 1.8) {
+            extend.setTarget(40);
+        } else if (actionTimer.getElapsedTimeSeconds() < 2.1) {
+            lift.setTarget(86);
+        }
+    }
     /** Build the paths for the auto (adds, for example, constant/linear headings while doing paths)
      * It is necessary to do this so that all the paths are built before the auto starts. **/
     public void buildPaths() {
@@ -167,21 +180,7 @@ public class BlueAutoTest extends OpMode {
                 /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the scorePose's position */
                 if(!follower.isBusy()) {
                     /* Score Preload */
-                    if (actionTimer.getElapsedTimeSeconds() < 0.3) {
-                        lift.setTarget(180);
-                    } else if (actionTimer.getElapsedTimeSeconds() < 0.6) {
-                        extend.setTarget(700);
-                    } else if (actionTimer.getElapsedTimeSeconds() < 0.9) {
-                        intake.IntakeUp();
-                    } else if (actionTimer.getElapsedTimeSeconds() < 1.2) {
-                        intake.IntakeReverse();
-                    } else if (actionTimer.getElapsedTimeSeconds() < 1.5) {
-                        intake.IntakeDown();
-                    } else if (actionTimer.getElapsedTimeSeconds() < 1.8) {
-                        extend.setTarget(40);
-                    } else if (actionTimer.getElapsedTimeSeconds() < 2.1) {
-                        lift.setTarget(86);
-                    }
+                    score();
                     /* Since this is a pathChain, we can have Pedro hold the end point while we are grabbing the sample */
                     if (actionTimer.getElapsedTimeSeconds() > 2.4) {
                         intake.IntakeForward();
@@ -208,21 +207,7 @@ public class BlueAutoTest extends OpMode {
                 }
                 if(!follower.isBusy()) {
                     /* Score Sample */
-                    if (actionTimer.getElapsedTimeSeconds() < 0.3) {
-                        lift.setTarget(180);
-                    } else if (actionTimer.getElapsedTimeSeconds() < 0.6) {
-                        extend.setTarget(700);
-                    } else if (actionTimer.getElapsedTimeSeconds() < 0.9) {
-                        intake.IntakeUp();
-                    } else if (actionTimer.getElapsedTimeSeconds() < 1.2) {
-                        intake.IntakeReverse();
-                    } else if (actionTimer.getElapsedTimeSeconds() < 1.5) {
-                        intake.IntakeDown();
-                    } else if (actionTimer.getElapsedTimeSeconds() < 1.8) {
-                        extend.setTarget(40);
-                    } else if (actionTimer.getElapsedTimeSeconds() < 2.1) {
-                        lift.setTarget(86);
-                    }
+                    score();
                     /* Since this is a pathChain, we can have Pedro hold the end point while we are grabbing the sample */
                     if (actionTimer.getElapsedTimeSeconds() > 2.4) {
                         intake.IntakeForward();
@@ -247,21 +232,7 @@ public class BlueAutoTest extends OpMode {
                 }
                 if(!follower.isBusy()) {
                     /* Score Sample */
-                    if (actionTimer.getElapsedTimeSeconds() < 0.3) {
-                        lift.setTarget(180);
-                    } else if (actionTimer.getElapsedTimeSeconds() < 0.6) {
-                        extend.setTarget(700);
-                    } else if (actionTimer.getElapsedTimeSeconds() < 0.9) {
-                        intake.IntakeUp();
-                    } else if (actionTimer.getElapsedTimeSeconds() < 1.2) {
-                        intake.IntakeReverse();
-                    } else if (actionTimer.getElapsedTimeSeconds() < 1.5) {
-                        intake.IntakeDown();
-                    } else if (actionTimer.getElapsedTimeSeconds() < 1.8) {
-                        extend.setTarget(40);
-                    } else if (actionTimer.getElapsedTimeSeconds() < 2.1) {
-                        lift.setTarget(86);
-                    }
+                    score();
                     /* Since this is a pathChain, we can have Pedro hold the end point while we are grabbing the sample */
                     if (actionTimer.getElapsedTimeSeconds() > 2.4) {
                         intake.IntakeForward();
@@ -284,21 +255,7 @@ public class BlueAutoTest extends OpMode {
                 }
                 if(!follower.isBusy()) {
                     /* Score Sample */
-                    if (actionTimer.getElapsedTimeSeconds() < 0.3) {
-                        lift.setTarget(180);
-                    } else if (actionTimer.getElapsedTimeSeconds() < 0.6) {
-                        extend.setTarget(700);
-                    } else if (actionTimer.getElapsedTimeSeconds() < 0.9) {
-                        intake.IntakeUp();
-                    } else if (actionTimer.getElapsedTimeSeconds() < 1.2) {
-                        intake.IntakeReverse();
-                    } else if (actionTimer.getElapsedTimeSeconds() < 1.5) {
-                        intake.IntakeDown();
-                    } else if (actionTimer.getElapsedTimeSeconds() < 1.8) {
-                        extend.setTarget(40);
-                    } else if (actionTimer.getElapsedTimeSeconds() < 2.1) {
-                        lift.setTarget(86);
-                    }
+                    score();
                     /* Since this is a pathChain, we can have Pedro hold the end point while we are grabbing the sample */
                     if (actionTimer.getElapsedTimeSeconds() > 2.4) {
                         setPathState(8);
@@ -308,7 +265,7 @@ public class BlueAutoTest extends OpMode {
             case 8:
             /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the scorePose's position */
                 if(!follower.isBusy()) {
-                    /* Level 1 Ascent */
+                    /* TODO: PARK IN WHITE LINE */
 
                     /* Set the state to a Case we won't use or define, so it just stops running an new paths */
                     setPathState(-1);
@@ -361,10 +318,6 @@ public class BlueAutoTest extends OpMode {
         rotateMotorOne = hardwareMap.get(Servo.class, "rotateMotorOne");
         rotateMotorTwo = hardwareMap.get(Servo.class, "rotateMotorTwo");
         intakeMotor = hardwareMap.get(CRServo.class, "intakeMotor");
-        frontLeft = hardwareMap.get(DcMotorEx.class, "left_front");
-        frontRight = hardwareMap.get(DcMotorEx.class, "right_front");
-        backLeft = hardwareMap.get(DcMotorEx.class, "left_back");
-        backRight = hardwareMap.get(DcMotorEx.class, "right_back");
 
         lift = new Lift(liftMotorOne, liftMotorTwo, analogEncoder);
         extend = new Extend(extendMotorOne, extendMotorTwo);
