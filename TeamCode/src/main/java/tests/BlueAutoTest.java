@@ -36,11 +36,12 @@ public class BlueAutoTest extends OpMode {
     private final Pose scorePose = new Pose(19.5, 124.5, Math.toRadians(-45));
 
     /** Lowest (First) Sample from the Spike Mark */
+    // TODO: TUNE THESE, SEEM TO BE GRABBING A BIT TOO HIGH
     private final Pose pickup1Pose = new Pose(42, 112, Math.toRadians(80));
 
     private final Pose pickup2Pose = new Pose(42, 122, Math.toRadians(80));
 
-    private final Pose pickup3Pose = new Pose(42, 132, Math.toRadians(80));
+    private final Pose pickup3Pose = new Pose(42, 131, Math.toRadians(85));
 
     /* These are our Paths and PathChains that we will define in buildPaths() */
     // it seems like the first and last paths should be paths, not chains.

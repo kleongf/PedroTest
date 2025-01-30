@@ -16,7 +16,7 @@ public final class Constants {
     public static final int ANGLE_ZERO = 90;
     public static final int ANGLE_HANG = 190;
     public static final int ANGLE_MID = 88;
-    public static final int ANGLE_MAX = 89;
+    public static final int ANGLE_MAX = 92;
     public static final int EXTEND_HIGH = 700;
     public static final int EXTEND_ZERO = 0;
     public static final int EXTEND_MID = 350;
@@ -24,10 +24,10 @@ public final class Constants {
     public static final int TRIM_AMOUNT = 30;
 
     // HARD STOPS
-    public static final int EXTEND_STOP_MAX = 720;
+    public static final int EXTEND_STOP_MAX = 760; // made larger for climb
     public static final int EXTEND_STOP_MIN = 0;
     public static final int ANGLE_STOP_MAX = 200;
-    public static final int ANGLE_STOP_MIN = 83;
+    public static final int ANGLE_STOP_MIN = 78;
 
     // INTAKE
     public static final double SERVO_UP = 0.8;

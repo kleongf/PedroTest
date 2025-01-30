@@ -61,6 +61,7 @@ public class MainTeleop extends OpMode {
     private boolean leftBumperPressed = false;
     private boolean crossPressed = false;
     private boolean leftTriggerPressed = false;
+    private boolean rightBumperPressed = false;
     private boolean dpadUpPressed = false;
     private boolean dpadDownPressed = false;
 
@@ -93,8 +94,7 @@ public class MainTeleop extends OpMode {
     D-pad down Climb (need to test climb first)
     A button retract and flip up intake (done, also works for retracting when grabbing sample)
 
-    Righgt trigger high bucket (done)
-    Right button specmin place (can't do specimen rn, skipping)
+    Right bumper: HANG
      */
 
     public void loop() {
@@ -118,6 +118,9 @@ public class MainTeleop extends OpMode {
                     extend.setTarget(EXTEND_MID);
                 } else if (gamepad1.left_bumper && !leftBumperPressed) {
                     extend.setTarget(EXTEND_MAX);
+                } else if (gamepad1.right_bumper && !rightBumperPressed) {
+                    lift.setTarget(ANGLE_HANG);
+                    // we need to increase extension max for trimming
                 }
                 break;
 
@@ -178,7 +181,7 @@ public class MainTeleop extends OpMode {
                     } else if (extend.getTarget() <= EXTEND_MAX) {
                         lift.setTarget(ANGLE_MAX);
                     } else {
-                        lift.setTarget(ANGLE_STOP_MIN + 6 * (extend.getTarget() / (EXTEND_MAX * 1.0)));
+                        lift.setTarget(ANGLE_STOP_MIN + 14 * (extend.getTarget() / (EXTEND_MAX * 1.0)));
                     }
                     intakeTimer.reset();
                     intakeState = IntakeState.INTAKE_UP;
@@ -220,6 +223,7 @@ public class MainTeleop extends OpMode {
         crossPressed = gamepad1.cross;
         dpadDownPressed = gamepad1.dpad_down;
         dpadUpPressed = gamepad1.dpad_up;
+        rightBumperPressed = gamepad1.right_bumper;
 
         // Drive logic (unchanged)
         double y = -this.gamepad2.left_stick_y;

@@ -11,7 +11,7 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 
 @Config
 @TeleOp
-public class PivotTesting extends OpMode {
+public class PivotTuning extends OpMode {
     private PIDController controller;
     public static double p = 0.0, i = 0, d = 0.00;
     public static double f = 0;
