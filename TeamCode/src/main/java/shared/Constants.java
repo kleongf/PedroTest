@@ -7,8 +7,8 @@ public final class Constants {
 
     // AUTONOMOUS
     public static final int ANGLE_DOWN_AUTO = 86;
-    public static final int ANGLE_UP_AUTO = 180;
-    public static final int EXTEND_HIGH_AUTO = 700;
+    public static final int ANGLE_UP_AUTO = 192;
+    public static final int EXTEND_HIGH_AUTO = 710;
     public static final int EXTEND_DEFAULT_AUTO = 40;
 
     // TELEOP
@@ -16,7 +16,9 @@ public final class Constants {
     public static final int ANGLE_ZERO = 90;
     public static final int ANGLE_HANG = 190;
     public static final int ANGLE_MID = 88;
-    public static final int ANGLE_MAX = 92;
+    // problem is that extension might be a bit too long, angle stops working
+    // find another extension that might work
+    public static final int ANGLE_MAX = 89;
     public static final int EXTEND_HIGH = 700;
     public static final int EXTEND_ZERO = 0;
     public static final int EXTEND_MID = 350;
@@ -27,7 +29,7 @@ public final class Constants {
     public static final int EXTEND_STOP_MAX = 760; // made larger for climb
     public static final int EXTEND_STOP_MIN = 0;
     public static final int ANGLE_STOP_MAX = 200;
-    public static final int ANGLE_STOP_MIN = 78;
+    public static final int ANGLE_STOP_MIN = 84;
 
     // INTAKE
     public static final double SERVO_UP = 0.8;

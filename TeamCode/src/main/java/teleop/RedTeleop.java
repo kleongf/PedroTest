@@ -1,5 +1,13 @@
 package teleop;
 
+import com.pedropathing.follower.Follower;
+import com.pedropathing.localization.Pose;
+import com.pedropathing.localization.PoseUpdater;
+import com.pedropathing.pathgen.BezierCurve;
+import com.pedropathing.pathgen.BezierLine;
+import com.pedropathing.pathgen.Path;
+import com.pedropathing.pathgen.PathChain;
+import com.pedropathing.pathgen.Point;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.AnalogInput;
@@ -7,14 +15,17 @@ import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
+
+import pedroPathing.constants.FConstants;
+import pedroPathing.constants.LConstants;
 import shared.Constants;
 import shared.Extend;
 import shared.Intake;
 import shared.Lift;
 import static shared.Constants.* ;
 
-@TeleOp(name = "Main TeleOp")
-public class MainTeleop extends OpMode {
+@TeleOp(name = "Red TeleOp")
+public class RedTeleop extends OpMode {
 
     public enum LiftState {
         LIFT_START,
@@ -30,8 +41,14 @@ public class MainTeleop extends OpMode {
         INTAKE_LIFT_DOWN
     }
 
+    public enum DriveState {
+        DRIVE_START,
+        DRIVE_WAIT
+    }
+
     LiftState liftState = LiftState.LIFT_START;
     IntakeState intakeState = IntakeState.INTAKE_START;
+    DriveState driveState = DriveState.DRIVE_START;
 
     public DcMotorEx liftMotorOne;
     public DcMotorEx liftMotorTwo;
@@ -64,6 +81,11 @@ public class MainTeleop extends OpMode {
     private boolean rightBumperPressed = false;
     private boolean dpadUpPressed = false;
     private boolean dpadDownPressed = false;
+    private boolean trianglePressed = false;
+
+    private Follower follower;
+    private final Pose scorePose = new Pose(123.5, 18.5, Math.toRadians(135));
+    private PoseUpdater poseUpdater;
 
     public void init() {
         liftMotorOne = hardwareMap.get(DcMotorEx.class, "liftMotorOne");
@@ -82,6 +104,12 @@ public class MainTeleop extends OpMode {
         lift = new Lift(liftMotorOne, liftMotorTwo, analogEncoder);
         extend = new Extend(extendMotorOne, extendMotorTwo);
         intake = new Intake(rotateMotorOne, rotateMotorTwo, intakeMotor);
+        com.pedropathing.util.Constants.setConstants(FConstants.class, LConstants.class);
+        follower = new Follower(hardwareMap);
+        follower.setStartingPose(scorePose);
+        follower.startTeleopDrive();
+        poseUpdater = new PoseUpdater(hardwareMap);
+
         actionTimer.reset();
     }
     /*
@@ -121,6 +149,8 @@ public class MainTeleop extends OpMode {
                 } else if (gamepad1.right_bumper && !rightBumperPressed) {
                     lift.setTarget(ANGLE_HANG);
                     // we need to increase extension max for trimming
+                } else if (gamepad1.cross) {
+
                 }
                 break;
 
@@ -202,6 +232,34 @@ public class MainTeleop extends OpMode {
                 intakeState = IntakeState.INTAKE_START;
         }
 
+        switch (driveState) {
+            case DRIVE_START:
+                if (gamepad2.triangle && !trianglePressed) {
+                    Pose currentPose = poseUpdater.getPose();
+                    PathChain goToBucket = follower.pathBuilder()
+                            .addPath(
+                                    new BezierLine(
+                                            new Point(currentPose),
+                                            new Point(scorePose)
+                                    )
+                            )
+                            .setLinearHeadingInterpolation(currentPose.getHeading(), scorePose.getHeading())
+                            .build();
+                    follower.followPath(goToBucket);
+                    driveState = DriveState.DRIVE_WAIT;
+                }
+                break;
+
+            case DRIVE_WAIT:
+                if (!follower.isBusy()) {
+                    driveState = DriveState.DRIVE_START;
+                }
+                break;
+
+            default:
+                intakeState = IntakeState.INTAKE_START;
+        }
+
         // dpad trimming
         if (gamepad1.dpad_up && !dpadUpPressed) {
             extend.setTarget(extend.getTarget() + TRIM_AMOUNT);
@@ -213,7 +271,10 @@ public class MainTeleop extends OpMode {
         lift.loop();
         intake.loop();
 
+        telemetry.addData("pose", poseUpdater.getPose().toString());
+
         telemetry.update();
+        follower.update();
 
         rightTriggerPressed = gamepad1.right_trigger > 0.5;
         leftBumperPressed = gamepad1.left_bumper;
@@ -224,6 +285,7 @@ public class MainTeleop extends OpMode {
         dpadDownPressed = gamepad1.dpad_down;
         dpadUpPressed = gamepad1.dpad_up;
         rightBumperPressed = gamepad1.right_bumper;
+        trianglePressed = gamepad2.triangle;
 
         // Drive logic (unchanged)
         double y = -this.gamepad2.left_stick_y;
@@ -245,4 +307,5 @@ public class MainTeleop extends OpMode {
         backRight.setPower(lowPower ? 0.5 * -backRightPower : -backRightPower);
     }
 }
+
 

@@ -35,14 +35,14 @@ public class RedAutoTest extends OpMode {
     private final Pose startPose = new Pose(135, 36, Math.toRadians(180));
 
     /** Scoring Pose of our robot. It is facing the submersible at a -45 degree (315 degree) angle. */
-    private final Pose scorePose = new Pose(124.5, 19.5, Math.toRadians(135));
+    private final Pose scorePose = new Pose(123.5, 18.5, Math.toRadians(135));
 
     /** Lowest (First) Sample from the Spike Mark */
-    private final Pose pickup1Pose = new Pose(102, 32, Math.toRadians(260));
+    private final Pose pickup1Pose = new Pose(103, 31, Math.toRadians(270));
 
-    private final Pose pickup2Pose = new Pose(102, 22, Math.toRadians(260));
+    private final Pose pickup2Pose = new Pose(101.5, 21, Math.toRadians(272));
 
-    private final Pose pickup3Pose = new Pose(102, 12, Math.toRadians(260));
+    private final Pose pickup3Pose = new Pose(103, 12, Math.toRadians(270));
 
     /* These are our Paths and PathChains that we will define in buildPaths() */
     // it seems like the first and last paths should be paths, not chains.
@@ -90,7 +90,7 @@ public class RedAutoTest extends OpMode {
                 .addPath(
                         new BezierCurve(
                                 new Point(scorePose),
-                                new Point(111.000, 39.000, Point.CARTESIAN),
+                                new Point(113.000, 40.000, Point.CARTESIAN),
                                 new Point(pickup1Pose)
                         )
                 )
@@ -101,7 +101,7 @@ public class RedAutoTest extends OpMode {
                 .addPath(
                         new BezierCurve(
                                 new Point(pickup1Pose),
-                                new Point(111.000, 39.000, Point.CARTESIAN),
+                                new Point(113.000, 40.000, Point.CARTESIAN),
                                 new Point(scorePose)
                         )
                 )
@@ -112,7 +112,7 @@ public class RedAutoTest extends OpMode {
                 .addPath(
                         new BezierCurve(
                                 new Point(scorePose),
-                                new Point(111.000, 29.000, Point.CARTESIAN),
+                                new Point(113.000, 30.000, Point.CARTESIAN),
                                 new Point(pickup2Pose)
                         )
                 )
@@ -123,7 +123,7 @@ public class RedAutoTest extends OpMode {
                 .addPath(
                         new BezierCurve(
                                 new Point(pickup2Pose),
-                                new Point(111.000, 29.000, Point.CARTESIAN),
+                                new Point(113.000, 30.000, Point.CARTESIAN),
                                 new Point(scorePose)
                         )
                 )
@@ -134,7 +134,7 @@ public class RedAutoTest extends OpMode {
                 .addPath(
                         new BezierCurve(
                                 new Point(scorePose),
-                                new Point(111.000, 19.000, Point.CARTESIAN),
+                                new Point(113.000, 20.000, Point.CARTESIAN),
                                 new Point(pickup3Pose)
                         )
                 )
@@ -145,7 +145,7 @@ public class RedAutoTest extends OpMode {
                 .addPath(
                         new BezierCurve(
                                 new Point(pickup3Pose),
-                                new Point(111.000, 19.000, Point.CARTESIAN),
+                                new Point(113.000, 20.000, Point.CARTESIAN),
                                 new Point(scorePose)
                         )
                 )
@@ -328,6 +328,7 @@ public class RedAutoTest extends OpMode {
         Constants.setConstants(FConstants.class, LConstants.class);
         follower = new Follower(hardwareMap);
         follower.setStartingPose(startPose);
+
         buildPaths();
     }
 
