@@ -100,7 +100,7 @@ public class RedTeleop extends OpMode {
         backLeft = hardwareMap.get(DcMotorEx.class, "left_back");
         backRight = hardwareMap.get(DcMotorEx.class, "right_back");
 
-        lift = new Lift(liftMotorOne, liftMotorTwo, analogEncoder);
+        lift = new Lift(liftMotorOne, liftMotorTwo, analogEncoder, extendMotorTwo);
         extend = new Extend(extendMotorOne, extendMotorTwo);
         intake = new Intake(rotateMotorOne, rotateMotorTwo, intakeMotor);
         com.pedropathing.util.Constants.setConstants(FConstants.class, LConstants.class);
@@ -146,8 +146,6 @@ public class RedTeleop extends OpMode {
                 } else if (gamepad1.right_bumper && !rightBumperPressed) {
                     lift.setTarget(ANGLE_HANG);
                     // we need to increase extension max for trimming
-                } else if (gamepad1.cross) {
-
                 }
                 break;
 

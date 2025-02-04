@@ -79,7 +79,7 @@ public class MainTeleop extends OpMode {
         backLeft = hardwareMap.get(DcMotorEx.class, "left_back");
         backRight = hardwareMap.get(DcMotorEx.class, "right_back");
 
-        lift = new Lift(liftMotorOne, liftMotorTwo, analogEncoder);
+        lift = new Lift(liftMotorOne, liftMotorTwo, analogEncoder, extendMotorTwo);
         extend = new Extend(extendMotorOne, extendMotorTwo);
         intake = new Intake(rotateMotorOne, rotateMotorTwo, intakeMotor);
         actionTimer.reset();

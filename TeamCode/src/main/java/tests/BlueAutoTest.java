@@ -324,7 +324,7 @@ public class BlueAutoTest extends OpMode {
         rotateMotorTwo = hardwareMap.get(Servo.class, "rotateMotorTwo");
         intakeMotor = hardwareMap.get(CRServo.class, "intakeMotor");
 
-        lift = new Lift(liftMotorOne, liftMotorTwo, analogEncoder);
+        lift = new Lift(liftMotorOne, liftMotorTwo, analogEncoder, extendMotorTwo);
         extend = new Extend(extendMotorOne, extendMotorTwo);
         intake = new Intake(rotateMotorOne, rotateMotorTwo, intakeMotor);
 
