@@ -42,12 +42,17 @@ public class RedAutoTest extends OpMode {
 
     private final Pose pickup2Pose = new Pose(101.5, 21, Math.toRadians(272));
 
-    private final Pose pickup3Pose = new Pose(103, 12, Math.toRadians(270));
+    private final Pose pickup3Pose = new Pose(101.5, 12, Math.toRadians(270));
 
+    private final Pose submersibleStartPose = new Pose(84, 44, Math.toRadians(90));
+    // associated point: (82, 20)
+
+    private final Pose endSubmersiblePose = new Pose(56, 44, Math.toRadians(90));
     /* These are our Paths and PathChains that we will define in buildPaths() */
     // it seems like the first and last paths should be paths, not chains.
     private Path scorePreload, park;
     private PathChain grabPickup1, grabPickup2, grabPickup3, scorePickup1, scorePickup2, scorePickup3;
+    private PathChain goToSubmersible, grabPickup, scorePickup;
 
     public DcMotorEx liftMotorOne;
     public DcMotorEx liftMotorTwo;
@@ -61,6 +66,14 @@ public class RedAutoTest extends OpMode {
     Lift lift;
     Extend extend;
     Intake intake;
+
+    int x = 0;
+    int y = 0;
+
+    boolean prevDpadUp = false;
+    boolean prevDpadDown = false;
+    boolean prevDpadLeft = false;
+    boolean prevDpadRight = false;
 
     public void score() {
         if (actionTimer.getElapsedTimeSeconds() < 0.3) {
@@ -82,6 +95,9 @@ public class RedAutoTest extends OpMode {
     /** Build the paths for the auto (adds, for example, constant/linear headings while doing paths)
      * It is necessary to do this so that all the paths are built before the auto starts. **/
     public void buildPaths() {
+        final Pose submersibleStartPose = new Pose(84 - 3*x, 38+ 3*y, Math.toRadians(90));
+
+        final Pose submersibleEndPose = new Pose(submersibleStartPose.getX(), submersibleStartPose.getY() + 4, Math.toRadians(90));
         /* This is our scorePreload path. We are using a BezierLine, which is a straight line. */
         scorePreload = new Path(new BezierLine(new Point(startPose), new Point(scorePose)));
         scorePreload.setLinearHeadingInterpolation(startPose.getHeading(), scorePose.getHeading());
@@ -152,6 +168,38 @@ public class RedAutoTest extends OpMode {
                 .setLinearHeadingInterpolation(pickup3Pose.getHeading(), scorePose.getHeading())
                 .build();
 
+        goToSubmersible = follower.pathBuilder()
+                .addPath(
+                        new BezierCurve(
+                                new Point(scorePose),
+                                new Point(80, 22, Point.CARTESIAN),
+                                new Point(submersibleStartPose)
+                        )
+                )
+                .setLinearHeadingInterpolation(scorePose.getHeading(), submersibleStartPose.getHeading())
+                .build();
+
+        grabPickup = follower.pathBuilder()
+                .addPath(
+                        new BezierLine(
+                                new Point(submersibleStartPose),
+                                new Point(submersibleEndPose)
+                        )
+                )
+                .setLinearHeadingInterpolation(submersibleStartPose.getHeading(), submersibleEndPose.getHeading())
+                .build();
+
+        scorePickup = follower.pathBuilder()
+                .addPath(
+                        new BezierCurve(
+                                new Point(submersibleEndPose),
+                                new Point(80, 22, Point.CARTESIAN),
+                                new Point(scorePose)
+                        )
+                )
+                .setLinearHeadingInterpolation(submersibleEndPose.getHeading(), scorePose.getHeading())
+                .build();
+
 
         /* This is our park path. We are using a BezierCurve with 3 points, which is a curved line that is curved based off of the control point */
 //        park = new Path(new BezierCurve(new Point(scorePose), /* Control Point */ new Point(parkControlPose), new Point(parkPose)));
@@ -165,20 +213,10 @@ public class RedAutoTest extends OpMode {
                 break;
 
             case 1:
-
-                /* You could check for
-                - Follower State: "if(!follower.isBusy() {}"
-                - Time: "if(pathTimer.getElapsedTimeSeconds() > 1) {}"
-                - Robot Position: "if(follower.getPose().getX() > 36) {}"
-
-                TODO: maybe here we reset
-                */
                 if (follower.isBusy()) {
                     actionTimer.resetTimer();
                 }
 
-
-                /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the scorePose's position */
                 if(!follower.isBusy()) {
                     /* Score Preload */
                     score();
@@ -260,19 +298,69 @@ public class RedAutoTest extends OpMode {
                     score();
                     /* Since this is a pathChain, we can have Pedro hold the end point while we are grabbing the sample */
                     if (actionTimer.getElapsedTimeSeconds() > 2.4) {
+                        intake.IntakeUp();
+                        follower.followPath(goToSubmersible, false);
                         setPathState(8);
                     }
                 }
                 break;
             case 8:
-                /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the scorePose's position */
-                if(!follower.isBusy()) {
-                    /* TODO: PARK IN WHITE LINE */
+                if (follower.isBusy()) {
+                    actionTimer.resetTimer();
+                }
 
-                    /* Set the state to a Case we won't use or define, so it just stops running an new paths */
-                    setPathState(-1);
+                if(!follower.isBusy()) {
+                    /* Score Preload */
+                    if (actionTimer.getElapsedTimeSeconds() < 0.3) {
+                        lift.setTarget(ANGLE_MID);
+                    } else if (actionTimer.getElapsedTimeSeconds() < 0.6) {
+                        extend.setTarget(EXTEND_MID);
+                    } else if (actionTimer.getElapsedTimeSeconds() < 0.9) {
+                        intake.IntakeForward();
+                    } else if (actionTimer.getElapsedTimeSeconds() < 1.2) {
+                        intake.IntakeDown();
+                    }
+                    /* Since this is a pathChain, we can have Pedro hold the end point while we are grabbing the sample */
+                    if (actionTimer.getElapsedTimeSeconds() > 1.5) {
+                        // changed holdEnd to false
+                        follower.followPath(grabPickup,false);
+                        setPathState(9);
+                    }
+                }
+
+            case 9:
+                if (follower.isBusy()) {
+                    actionTimer.resetTimer();
+                }
+
+                if (!follower.isBusy()) {
+                    if (actionTimer.getElapsedTimeSeconds() < 1.3 && actionTimer.getElapsedTimeSeconds() > 1.2) {
+                        intake.IntakeUp();
+                    } else if (actionTimer.getElapsedTimeSeconds() < 1.6) {
+                        lift.setTarget(ANGLE_ZERO);
+                    } else if (actionTimer.getElapsedTimeSeconds() < 1.9) {
+                        extend.setTarget(EXTEND_ZERO);
+                    }
+                    if (actionTimer.getElapsedTimeSeconds() > 2.2) {
+                        follower.followPath(scorePickup, true);
+                        setPathState(10);
+                    }
                 }
                 break;
+            case 10:
+                if (follower.isBusy()) {
+                    actionTimer.resetTimer();
+                }
+                if(!follower.isBusy()) {
+                    /* Score Sample */
+                    score();
+                    /* Since this is a pathChain, we can have Pedro hold the end point while we are grabbing the sample */
+                    if (actionTimer.getElapsedTimeSeconds() > 2.4) {
+                        setPathState(-1);
+                    }
+                }
+                break;
+
         }
     }
 
@@ -294,6 +382,7 @@ public class RedAutoTest extends OpMode {
         intake.loop();
         lift.loop();
         extend.loop();
+        // detector.loop();
 
         // Feedback to Driver Hub
         telemetry.addData("path state", pathState);
@@ -328,18 +417,36 @@ public class RedAutoTest extends OpMode {
         Constants.setConstants(FConstants.class, LConstants.class);
         follower = new Follower(hardwareMap);
         follower.setStartingPose(startPose);
-
-        buildPaths();
     }
 
     /** This method is called continuously after Init while waiting for "play". **/
     @Override
-    public void init_loop() {}
+    public void init_loop() {
+        if (gamepad1.dpad_up && !prevDpadUp) {
+            y++;
+        } else if (gamepad1.dpad_down && !prevDpadDown) {
+            y--;
+        } else if (gamepad1.dpad_left && !prevDpadLeft) {
+            x--;
+        } else if (gamepad1.dpad_right && !prevDpadRight) {
+            x++;
+        }
+
+        prevDpadUp = gamepad1.dpad_up;
+        prevDpadLeft = gamepad1.dpad_left;
+        prevDpadRight = gamepad1.dpad_right;
+        prevDpadDown = gamepad1.dpad_down;
+
+        telemetry.addData("X", x);
+        telemetry.addData("Y", y);
+        telemetry.update();
+    }
 
     /** This method is called once at the start of the OpMode.
      * It runs all the setup actions, including building paths and starting the path system **/
     @Override
     public void start() {
+        buildPaths();
         opmodeTimer.resetTimer();
         setPathState(0);
     }
@@ -349,6 +456,21 @@ public class RedAutoTest extends OpMode {
     public void stop() {
     }
 }
+
+//// make it go slower:
+//        // also once it is lifted down, we need to go forward to intake it
+//        // put this down in the next path
+//        // follower.setMaxPower(power);
+//                if(follower.isBusy()){
+////                    if(detector.getBlockDetected()) {
+////                        follower.breakFollowing();
+////                        // set extension
+////                    }
+//        }
+//        if(!follower.isBusy()) {
+//        // just go down anyway and go back
+//        }
+//        break;
 
 
 

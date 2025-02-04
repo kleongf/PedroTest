@@ -44,10 +44,15 @@ public class Intake {
         motorTwo.setPosition(SERVO_UP);
     }
 
+    public void IntakeExtendMaxDown() {
+        motorOne.setPosition(0.4);
+        motorTwo.setPosition(0.4);
+    }
+
     public void IntakeDown() {
         // was 0.22
-        motorOne.setPosition(SERVO_DOWN);
-        motorTwo.setPosition(SERVO_DOWN);
+        motorOne.setPosition(0.24);
+        motorTwo.setPosition(0.24);
     }
 
 }

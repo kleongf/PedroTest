@@ -46,6 +46,7 @@ public class BlueAutoTest extends OpMode {
     private final Pose submersiblePose = new Pose(60, 96, Math.toRadians(-90));
     // control point at (60, 115)
 
+
     /* These are our Paths and PathChains that we will define in buildPaths() */
     // it seems like the first and last paths should be paths, not chains.
     private Path scorePreload, park;

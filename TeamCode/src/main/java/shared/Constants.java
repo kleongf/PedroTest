@@ -6,7 +6,7 @@ public final class Constants {
     // maybe we put poses in here?
 
     // AUTONOMOUS
-    public static final int ANGLE_DOWN_AUTO = 86;
+    public static final double ANGLE_DOWN_AUTO = 87.5;
     public static final int ANGLE_UP_AUTO = 192;
     public static final int EXTEND_HIGH_AUTO = 710;
     public static final int EXTEND_DEFAULT_AUTO = 40;
@@ -15,10 +15,10 @@ public final class Constants {
     public static final int ANGLE_UP = 180;
     public static final int ANGLE_ZERO = 90;
     public static final int ANGLE_HANG = 190;
-    public static final int ANGLE_MID = 88;
+    public static final double ANGLE_MID = 88.3;
     // problem is that extension might be a bit too long, angle stops working
     // find another extension that might work
-    public static final int ANGLE_MAX = 89;
+    public static final double ANGLE_MAX = 93;
     public static final int EXTEND_HIGH = 700;
     public static final int EXTEND_ZERO = 0;
     public static final int EXTEND_MID = 350;

@@ -85,7 +85,6 @@ public class RedTeleop extends OpMode {
 
     private Follower follower;
     private final Pose scorePose = new Pose(123.5, 18.5, Math.toRadians(135));
-    private PoseUpdater poseUpdater;
 
     public void init() {
         liftMotorOne = hardwareMap.get(DcMotorEx.class, "liftMotorOne");
@@ -107,8 +106,6 @@ public class RedTeleop extends OpMode {
         com.pedropathing.util.Constants.setConstants(FConstants.class, LConstants.class);
         follower = new Follower(hardwareMap);
         follower.setStartingPose(scorePose);
-        follower.startTeleopDrive();
-        poseUpdater = new PoseUpdater(hardwareMap);
 
         actionTimer.reset();
     }
@@ -235,11 +232,14 @@ public class RedTeleop extends OpMode {
         switch (driveState) {
             case DRIVE_START:
                 if (gamepad2.triangle && !trianglePressed) {
-                    Pose currentPose = poseUpdater.getPose();
+                    Pose currentPose = follower.getPose();
                     PathChain goToBucket = follower.pathBuilder()
                             .addPath(
-                                    new BezierLine(
+                                    // maybe it should be a curve...
+                                    // we don't want the bot to hit stuff
+                                    new BezierCurve(
                                             new Point(currentPose),
+                                            new Point(80, 22),
                                             new Point(scorePose)
                                     )
                             )
@@ -252,12 +252,13 @@ public class RedTeleop extends OpMode {
 
             case DRIVE_WAIT:
                 if (!follower.isBusy()) {
+                    follower.breakFollowing();
                     driveState = DriveState.DRIVE_START;
                 }
                 break;
 
             default:
-                intakeState = IntakeState.INTAKE_START;
+                driveState = DriveState.DRIVE_START;
         }
 
         // dpad trimming
@@ -270,8 +271,6 @@ public class RedTeleop extends OpMode {
         extend.loop();
         lift.loop();
         intake.loop();
-
-        telemetry.addData("pose", poseUpdater.getPose().toString());
 
         telemetry.update();
         follower.update();
@@ -301,10 +300,13 @@ public class RedTeleop extends OpMode {
         // slow mo
         boolean lowPower = gamepad2.left_trigger > 0.5;
 
-        frontLeft.setPower(lowPower ? 0.5 * frontLeftPower : frontLeftPower);
-        backLeft.setPower(lowPower ? 0.5 * backLeftPower : backLeftPower);
-        frontRight.setPower(lowPower ? 0.5 * -frontRightPower : -frontRightPower);
-        backRight.setPower(lowPower ? 0.5 * -backRightPower : -backRightPower);
+        // i think this will solve the conflicting issues
+        if (!follower.isBusy()) {
+            frontLeft.setPower(lowPower ? 0.5 * frontLeftPower : frontLeftPower);
+            backLeft.setPower(lowPower ? 0.5 * backLeftPower : backLeftPower);
+            frontRight.setPower(lowPower ? 0.5 * -frontRightPower : -frontRightPower);
+            backRight.setPower(lowPower ? 0.5 * -backRightPower : -backRightPower);
+        }
     }
 }
 
