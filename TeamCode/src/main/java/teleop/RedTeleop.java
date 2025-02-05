@@ -260,9 +260,9 @@ public class RedTeleop extends OpMode {
         }
 
         // dpad trimming
-        if (gamepad1.dpad_up && !dpadUpPressed) {
+        if (gamepad2.dpad_up && !dpadUpPressed) {
             extend.setTarget(extend.getTarget() + TRIM_AMOUNT);
-        } else if (gamepad1.dpad_down && !dpadDownPressed) {
+        } else if (gamepad2.dpad_down && !dpadDownPressed) {
             extend.setTarget(extend.getTarget() - TRIM_AMOUNT);
         }
 

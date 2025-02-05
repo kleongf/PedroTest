@@ -58,7 +58,7 @@ public class PivotTuning extends OpMode {
     @Override
     public void loop() {
         controller.setPID(p, i, d);
-        // double ffcoef = 1 + (extendMotor.getCurrentPosition() / 700.0) * 1.5;
+        double ffcoef = 1 + (extendMotor.getCurrentPosition() / 700.0) * 1.7;
         double scale = extendMotor.getCurrentPosition() / length_1_ticks;  // Scale based on the maximum length (in ticks)
 
         // Compute the adjusted distances based on the current arm extension
@@ -76,7 +76,7 @@ public class PivotTuning extends OpMode {
         double torque_end = m_end * d_end; // Point mass at the end
 
         // Sum all torques to get total torque
-        double ffcoef = (torque_1 + torque_2 + torque_3 + torque_4 + torque_end);
+        // double ffcoef = (torque_1 + torque_2 + torque_3 + torque_4 + torque_end);
 
         // TODO: if this code doesn't work uncomment this
         // double ffcoef = 1 + (extendMotor.getCurrentPosition() / 700) * 2;
