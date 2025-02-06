@@ -26,6 +26,7 @@ public class Lift {
         this.motorTwo = motorTwo;
         this.encoder = encoder;
         this.extendMotor = extendMotor;
+        // maybe this is causing the problem? idk
         extendMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         extendMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         extendMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);

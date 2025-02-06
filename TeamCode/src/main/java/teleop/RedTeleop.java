@@ -285,9 +285,14 @@ public class RedTeleop extends OpMode {
         trianglePressed = gamepad2.triangle;
 
         // Drive logic (unchanged)
+        // TODO: actually i just switched the controls lets see if it wroks
         double y = -gamepad2.left_stick_x;
         double x = gamepad2.left_stick_y * 1.1;
         double rx = gamepad2.right_stick_y;
+
+        if (Math.abs(y) > 0.2 || Math.abs(x) > 0.2 || Math.abs(rx) > 0.2) {
+            follower.breakFollowing();
+        }
 
         double denominator = Math.max(Math.abs(y) + Math.abs(x) + Math.abs(rx), 1);
         double frontLeftPower = (y + x + rx) / denominator;
