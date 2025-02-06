@@ -292,6 +292,7 @@ public class RedTeleop extends OpMode {
 
         if (Math.abs(y) > 0.2 || Math.abs(x) > 0.2 || Math.abs(rx) > 0.2) {
             follower.breakFollowing();
+            driveState = DriveState.DRIVE_START;
         }
 
         double denominator = Math.max(Math.abs(y) + Math.abs(x) + Math.abs(rx), 1);
