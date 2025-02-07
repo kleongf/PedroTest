@@ -106,7 +106,6 @@ public class RedTeleop extends OpMode {
         com.pedropathing.util.Constants.setConstants(FConstants.class, LConstants.class);
         follower = new Follower(hardwareMap);
         follower.setStartingPose(scorePose);
-
         actionTimer.reset();
     }
     /*
@@ -121,6 +120,10 @@ public class RedTeleop extends OpMode {
 
     Right bumper: HANG
      */
+    @Override
+    public void start() {
+        follower.startTeleopDrive();
+    }
 
     public void loop() {
         switch (liftState) {
@@ -251,6 +254,7 @@ public class RedTeleop extends OpMode {
             case DRIVE_WAIT:
                 if (!follower.isBusy()) {
                     follower.breakFollowing();
+                    follower.startTeleopDrive();
                     driveState = DriveState.DRIVE_START;
                 }
                 break;
@@ -270,9 +274,6 @@ public class RedTeleop extends OpMode {
         lift.loop();
         intake.loop();
 
-        telemetry.update();
-        follower.update();
-
         rightTriggerPressed = gamepad1.right_trigger > 0.5;
         leftBumperPressed = gamepad1.left_bumper;
         leftStickPressed = gamepad1.left_stick_button;
@@ -285,10 +286,11 @@ public class RedTeleop extends OpMode {
         trianglePressed = gamepad2.triangle;
 
         // Drive logic (unchanged)
-        // TODO: actually i just switched the controls lets see if it wroks
-        double y = -gamepad2.left_stick_x;
-        double x = gamepad2.left_stick_y * 1.1;
-        double rx = gamepad2.right_stick_y;
+        double y = -gamepad2.left_stick_y;
+        double x = gamepad2.left_stick_x * 1.1;
+        double rx = gamepad2.right_stick_x;
+
+        // allowing driver to drive (hopefully) in the middle of auto drive back
 
         if (Math.abs(y) > 0.2 || Math.abs(x) > 0.2 || Math.abs(rx) > 0.2) {
             follower.breakFollowing();
@@ -303,15 +305,22 @@ public class RedTeleop extends OpMode {
 
         // slow mo
         boolean lowPower = gamepad2.left_trigger > 0.5;
+        // follower.setMaxPower(0.5) else follower.setMaxPower(1)
 
         // i think this will solve the conflicting issues
         if (!follower.isBusy()) {
-            frontLeft.setPower(lowPower ? 0.5 * frontLeftPower : frontLeftPower);
-            backLeft.setPower(lowPower ? 0.5 * backLeftPower : backLeftPower);
-            frontRight.setPower(lowPower ? 0.5 * -frontRightPower : -frontRightPower);
-            backRight.setPower(lowPower ? 0.5 * -backRightPower : -backRightPower);
+            follower.setTeleOpMovementVectors(-gamepad2.left_stick_y, -gamepad2.left_stick_x, -gamepad2.right_stick_x, true);
+//            frontLeft.setPower(lowPower ? 0.5 * frontLeftPower : frontLeftPower);
+//            backLeft.setPower(lowPower ? 0.5 * backLeftPower : backLeftPower);
+//            frontRight.setPower(lowPower ? 0.5 * -frontRightPower : -frontRightPower);
+//            backRight.setPower(lowPower ? 0.5 * -backRightPower : -backRightPower);
         }
+        telemetry.addData("TeleOp Y", -gamepad2.left_stick_y);
+        telemetry.addData("TeleOp X", -gamepad2.left_stick_x);
+        telemetry.addData("TeleOp RX", -gamepad2.right_stick_x);
+        telemetry.update();
+        follower.update();
+
     }
 }
-
 

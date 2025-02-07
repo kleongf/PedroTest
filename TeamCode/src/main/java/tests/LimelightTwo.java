@@ -38,20 +38,6 @@ import java.util.List;
 public class LimelightTwo extends LinearOpMode {
 
     private Limelight3A limelight;
-    public double calculateDistanceY(double targetY) {
-        // watch out for div by 0 errors
-        if (targetY == 0) {
-            return 0;
-        }
-        return (5 / (Math.tan(Math.toRadians(-targetY))));
-    }
-
-    public double calculateDistanceX(double targetY, double targetX) {
-        if (targetY == 0) {
-            return 0;
-        }
-        return (5 / (Math.tan(Math.toRadians(-targetY)))) * Math.tan(Math.toRadians(targetX));
-    }
 
     @Override
     public void runOpMode() throws InterruptedException
@@ -98,8 +84,6 @@ public class LimelightTwo extends LinearOpMode {
                 telemetry.addData("LL Latency", captureLatency + targetingLatency);
                 telemetry.addData("Parse Latency", parseLatency);
                 telemetry.addData("PythonOutput", java.util.Arrays.toString(result.getPythonOutput()));
-                telemetry.addData("Distance-X", calculateDistanceX(angleY, angleX));
-                telemetry.addData("Distance-Y", calculateDistanceY(angleY));
 
                 if (result.isValid()) {
                     telemetry.addData("tx", result.getTx());

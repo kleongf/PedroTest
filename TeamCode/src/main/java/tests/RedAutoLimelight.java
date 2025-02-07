@@ -134,7 +134,7 @@ public class RedAutoLimelight extends OpMode {
                         telemetry.addData("PythonOutput", pythonOutput);
                         // pythonOutput[0] is the x position of the target on the frame
                         // our arm is going to be calibrated to the exact center of the camera (or offset a bit)
-                        if (pythonOutput[0] != 0 && pythonOutput[1] != 0) {
+                        if (pythonOutput[0] != -1 && pythonOutput[1] != -1) {
                             if (Math.abs(pythonOutput[0] - 160) < 10) {
                                 follower.breakFollowing();
                             }
@@ -185,7 +185,7 @@ public class RedAutoLimelight extends OpMode {
                         telemetry.addData("PythonOutput", pythonOutput);
                         // pythonOutput[1] is the y position of the target on the frame
                         // our arm is going to be calibrated to the exact center of the camera (or offset a bit)
-                        if (pythonOutput[0] != 0 && pythonOutput[1] != 0) {
+                        if (pythonOutput[0] != -1 && pythonOutput[1] != -1) {
                             if (Math.abs(pythonOutput[1] - 120) < 8) {
                                 follower.breakFollowing();
                             }
