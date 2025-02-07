@@ -32,16 +32,16 @@ public class RedAutoSubTest extends OpMode {
 
 
     /** Start Pose of our robot */
-    private final Pose startPose = new Pose(135, 72, Math.toRadians(180));
+    private final Pose startPose = new Pose(135, 72, Math.toRadians(0));
 
     /** Scoring Poses of our robot. It is facing the submersible. */
-    private final Pose scorePose = new Pose(105, 72, Math.toRadians(180));
+    private final Pose scorePose = new Pose(105, 72, Math.toRadians(0));
 
-    private final Pose scoreOnePose = new Pose(105, 70, Math.toRadians(180));
+    private final Pose scoreOnePose = new Pose(105, 70, Math.toRadians(0));
 
-    private final Pose scoreTwoPose = new Pose(105, 68, Math.toRadians(180));
+    private final Pose scoreTwoPose = new Pose(105, 68, Math.toRadians(0));
 
-    private final Pose scoreThreePose = new Pose(105, 66, Math.toRadians(180));
+    private final Pose scoreThreePose = new Pose(105, 66, Math.toRadians(0));
 
     // TODO: MAKE THESE YOURSELF
     /** Pick up blocks */
