@@ -83,19 +83,17 @@ public class RedAutoSubTest extends OpMode {
     // TODO: EDIT SCORE FUNCTION
     public void score() {
         if (actionTimer.getElapsedTimeSeconds() < 0.3) {
-            lift.setTarget(ANGLE_UP_AUTO);
-        } else if (actionTimer.getElapsedTimeSeconds() < 0.6) {
-            extend.setTarget(EXTEND_HIGH_AUTO);
-        } else if (actionTimer.getElapsedTimeSeconds() < 0.9) {
             intake.IntakeUp();
-        } else if (actionTimer.getElapsedTimeSeconds() < 1.2) {
+            lift.setTarget(105);
+        } else if (actionTimer.getElapsedTimeSeconds() < 0.6) {
+            extend.setTarget(200);
+        } else if (actionTimer.getElapsedTimeSeconds() < 1) {
             intake.IntakeReverse();
-        } else if (actionTimer.getElapsedTimeSeconds() < 1.5) {
-            intake.IntakeDown();
-        } else if (actionTimer.getElapsedTimeSeconds() < 1.8) {
+        } else if (actionTimer.getElapsedTimeSeconds() < 1.2) {
             extend.setTarget(EXTEND_DEFAULT_AUTO);
-        } else if (actionTimer.getElapsedTimeSeconds() < 2.1) {
+        } else if (actionTimer.getElapsedTimeSeconds() < 1.5) {
             lift.setTarget(ANGLE_DOWN_AUTO);
+            intake.IntakeDown();
         }
     }
     /** Build the paths for the auto (adds, for example, constant/linear headings while doing paths)
