@@ -24,36 +24,21 @@ import shared.Intake;
 import shared.Lift;
 import static shared.Constants.* ;
 
-import org.firstinspires.ftc.teamcode.R;
-import org.opencv.core.Mat;
-
-@TeleOp(name = "Red Spec TeleOp")
-public class RedTeleop extends OpMode {
-
-    public enum RobotState {
-        START,
-        DROPOFF,
-        SCORE,
-        RETRACT,
-        DOWN,
-    }
-
+@TeleOp(name = "Red TeleOp")
+public class RedSpecTeleop extends OpMode {
 
     public enum LiftState {
         LIFT_START,
-        LIFT_SCORE,
-        LIFT_DROPOFF,
+        LIFT_UP_HIGH,
         EXTEND_RETRACT,
         LIFT_DOWN,
-        WAIT
+        WAIT,
     }
 
     public enum IntakeState {
         INTAKE_START,
         INTAKE_UP,
-        INTAKE_LIFT_DOWN,
-        INTAKE_DROPOFF,
-        INTAKE_SCORE
+        INTAKE_LIFT_DOWN
     }
 
     public enum DriveState {
@@ -63,7 +48,6 @@ public class RedTeleop extends OpMode {
 
     LiftState liftState = LiftState.LIFT_START;
     IntakeState intakeState = IntakeState.INTAKE_START;
-    RobotState robotState = RobotState.START;
     DriveState driveState = DriveState.DRIVE_START;
 
     public DcMotorEx liftMotorOne;
@@ -98,11 +82,9 @@ public class RedTeleop extends OpMode {
     private boolean dpadUpPressed = false;
     private boolean dpadDownPressed = false;
     private boolean trianglePressed = false;
-    private boolean squarePressed = false;
 
     private Follower follower;
-    private final Pose submersiblePose = new Pose(106, 72, Math.toRadians(0));
-    private final Pose dropOffPose = new Pose(135, 108, Math.toRadians(0));
+    private final Pose scorePose = new Pose(123.5, 18.5, Math.toRadians(135));
 
     public void init() {
         liftMotorOne = hardwareMap.get(DcMotorEx.class, "liftMotorOne");
@@ -123,7 +105,7 @@ public class RedTeleop extends OpMode {
         intake = new Intake(rotateMotorOne, rotateMotorTwo, intakeMotor);
         com.pedropathing.util.Constants.setConstants(FConstants.class, LConstants.class);
         follower = new Follower(hardwareMap);
-        follower.setStartingPose(submersiblePose);
+        follower.setStartingPose(scorePose);
         follower.startTeleopDrive();
         actionTimer.reset();
     }
@@ -145,29 +127,84 @@ public class RedTeleop extends OpMode {
     }
 
     public void loop() {
-        switch (robotState) {
-            case START:
-                // right trigger: score
+        switch (liftState) {
+            case LIFT_START:
                 if (gamepad1.right_trigger > 0.5 && !rightTriggerPressed) {
-                    lift.setTarget(105);
-                    // should go wayyyyy down
-                    intake.IntakeDown();
+                    lift.setTarget(ANGLE_UP);
                     actionTimer.reset();
-                    robotState = RobotState.SCORE;
-                } else if (gamepad1.right_bumper && !rightBumperPressed) {
-                    lift.setTarget(40);
-                    extend.setTarget(40);
-                    actionTimer.reset();
-                    robotState = RobotState.DROPOFF;
-                } else if (gamepad1.cross) {
+                    liftState = LiftState.LIFT_UP_HIGH;
+                } else if (gamepad1.cross && !crossPressed) {
                     if (lift.getTarget() > ANGLE_ZERO + 10) {
                         extend.setTarget(EXTEND_ZERO);
+                        actionTimer.reset();
+                        liftState = LiftState.EXTEND_RETRACT;
                     } else {
                         lift.setTarget(ANGLE_ZERO);
+                        actionTimer.reset();
+                        liftState = LiftState.LIFT_DOWN;
                     }
+                } else if (gamepad1.left_trigger > 0.5 && !leftTriggerPressed) {
+                    extend.setTarget(EXTEND_MID);
+                } else if (gamepad1.left_bumper && !leftBumperPressed) {
+                    extend.setTarget(EXTEND_MAX);
+                } else if (gamepad1.right_bumper && !rightBumperPressed) {
+                    lift.setTarget(ANGLE_HANG);
+                    // we need to increase extension max for trimming
+                }
+                break;
+
+            case LIFT_UP_HIGH:
+                if (actionTimer.seconds() >= 0.3) {
+                    extend.setTarget(EXTEND_HIGH);
                     actionTimer.reset();
-                    robotState = RobotState.RETRACT;
-                } else if (gamepad1.left_stick_button && !leftStickPressed) {
+                    liftState = LiftState.WAIT;
+                }
+                break;
+
+            case WAIT:
+                if (actionTimer.seconds() >= 0.3) {
+                    actionTimer.reset();
+                    liftState = LiftState.LIFT_START;
+                }
+                break;
+
+            case LIFT_DOWN:
+                if (actionTimer.seconds() >= 0.3) {
+                    extend.setTarget(EXTEND_ZERO);
+                    actionTimer.reset();
+                    liftState = LiftState.WAIT;
+                }
+                break;
+
+            case EXTEND_RETRACT:
+                if (actionTimer.seconds() >= 0.3) {
+                    lift.setTarget(ANGLE_ZERO);
+                    actionTimer.reset();
+                    liftState = LiftState.WAIT;
+                }
+                break;
+
+            default:
+                liftState = LiftState.LIFT_START;
+        }
+
+        switch (intakeState) {
+            case INTAKE_START:
+                if (gamepad1.left_stick_button && !leftStickPressed) {
+                    intake.IntakeForward();
+                    intake.IntakeDown();
+                    intakeTimer.reset();
+                    intakeState = IntakeState.INTAKE_LIFT_DOWN;
+                } else if (gamepad1.right_stick_button && !rightStickPressed) {
+                    intake.IntakeReverse();
+                    // then wait, then intake stop
+                    intakeTimer.reset();
+                    intakeState = IntakeState.INTAKE_START;
+                }
+                break;
+
+            case INTAKE_LIFT_DOWN:
+                if (intakeTimer.seconds() >= 0.3) {
                     if (extend.getTarget() <= EXTEND_MID && extend.getTarget() > 0) {
                         lift.setTarget(ANGLE_MID);
                     } else if (extend.getTarget() <= EXTEND_MAX && extend.getTarget() > EXTEND_MID) {
@@ -175,91 +212,55 @@ public class RedTeleop extends OpMode {
                     } else {
                         lift.setTarget(ANGLE_STOP_MIN);
                     }
-                    intake.IntakeForward();
-                    actionTimer.reset();
-                    robotState = RobotState.DOWN;
-                } else if (gamepad1.left_trigger > 0.5 && !leftTriggerPressed) {
-                    extend.setTarget(EXTEND_MID);
-                } else if (gamepad1.left_bumper && !leftBumperPressed) {
-                    extend.setTarget(EXTEND_MAX);
-                } else if (gamepad1.right_stick_button && !rightStickPressed) {
-                    intake.IntakeReverse();
+                    intakeTimer.reset();
+                    intakeState = IntakeState.INTAKE_UP;
                 }
                 break;
-            case RETRACT:
-                if (actionTimer.seconds() > 0.3) {
-                    if (extend.getTarget() == EXTEND_ZERO) {
-                        lift.setTarget(ANGLE_ZERO);
-                    } else {
-                        extend.setTarget(EXTEND_ZERO);
-                    }
-                }
-                break;
-            case DOWN:
-                if (actionTimer.seconds() > 0.3) {
-                    if (!gamepad1.left_stick_button) {
-                        lift.setTarget(ANGLE_ZERO);
-                        intake.IntakeStop();
-                        actionTimer.reset();
-                        robotState = RobotState.START;
-                    }
-                }
-                break;
-            case SCORE:
-                if (actionTimer.seconds() > 0.4) {
-                    extend.setTarget(200);
-                } else if (actionTimer.seconds() > 0.8) {
-                    intake.IntakeReverse();
-                } else if (actionTimer.seconds() > 1) {
-                    robotState = RobotState.START;
-                }
-                break;
-            case DROPOFF:
-                if (actionTimer.seconds() > 0.4) {
+
+            case INTAKE_UP:
+                if (!gamepad1.left_stick_button) {
                     intake.IntakeUp();
-                } else if (actionTimer.seconds() > 0.8) {
-                    intake.IntakeForward();
-                } else if (actionTimer.seconds() > 1) {
-                    robotState = RobotState.START;
+                    // stop intake when its not being used
+                    intake.IntakeStop();
+                    intakeTimer.reset();
+                    intakeState = IntakeState.INTAKE_START;
                 }
                 break;
+
             default:
-                robotState = RobotState.START;
+                intakeState = IntakeState.INTAKE_START;
         }
 
         switch (driveState) {
             case DRIVE_START:
                 if (gamepad2.triangle && !trianglePressed) {
                     Pose currentPose = follower.getPose();
-                    PathChain goToSubmersible = follower.pathBuilder()
+                    PathChain goToBucket = follower.pathBuilder()
                             .addPath(
-                                    new BezierLine(
+                                    // maybe it should be a curve...
+                                    // we don't want the bot to hit stuff
+                                    new BezierCurve(
                                             new Point(currentPose),
-                                            new Point(submersiblePose)
+                                            new Point(80, 22),
+                                            new Point(scorePose)
                                     )
                             )
-                            .setLinearHeadingInterpolation(currentPose.getHeading(), submersiblePose.getHeading())
+                            .setLinearHeadingInterpolation(currentPose.getHeading(), scorePose.getHeading())
                             .build();
-                    follower.followPath(goToSubmersible);
-                    driveState = DriveState.DRIVE_WAIT;
-                }
-                if (gamepad2.square && !squarePressed) {
-                    Pose currentPose = follower.getPose();
-                    PathChain goToDropOff = follower.pathBuilder()
-                            .addPath(
-                                    new BezierLine(
-                                            new Point(currentPose),
-                                            new Point(dropOffPose)
-                                    )
-                            )
-                            .setLinearHeadingInterpolation(currentPose.getHeading(), dropOffPose.getHeading())
-                            .build();
-                    follower.followPath(goToDropOff);
+                    follower.followPath(goToBucket);
                     driveState = DriveState.DRIVE_WAIT;
                 }
                 break;
 
             case DRIVE_WAIT:
+                // does not work... just slows it down a bit
+                if (follower.isBusy()) {
+                    if (gamepad2.right_trigger > 0.5) {
+                        follower.breakFollowing();
+                        follower.startTeleopDrive();
+                        driveState = DriveState.DRIVE_START;
+                    }
+                }
                 if (!follower.isBusy()) {
                     follower.breakFollowing();
                     follower.startTeleopDrive();
@@ -282,8 +283,6 @@ public class RedTeleop extends OpMode {
         lift.loop();
         intake.loop();
 
-        // copy the gamepads you bum
-
         rightTriggerPressed = gamepad1.right_trigger > 0.5;
         leftBumperPressed = gamepad1.left_bumper;
         leftStickPressed = gamepad1.left_stick_button;
@@ -294,7 +293,14 @@ public class RedTeleop extends OpMode {
         dpadUpPressed = gamepad1.dpad_up;
         rightBumperPressed = gamepad1.right_bumper;
         trianglePressed = gamepad2.triangle;
-        squarePressed = gamepad2.square;
+
+        // does not work
+
+        //        if (gamepad2.left_trigger > 0.5) {
+//            follower.setMaxPower(0.5);
+//        } else {
+//            follower.setMaxPower(1);
+//        }
 
         if (!follower.isBusy()) {
             follower.setTeleOpMovementVectors(-gamepad2.left_stick_y, -gamepad2.left_stick_x, -gamepad2.right_stick_x, true);
@@ -304,4 +310,5 @@ public class RedTeleop extends OpMode {
 
     }
 }
+
 
