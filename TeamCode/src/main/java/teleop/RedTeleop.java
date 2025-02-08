@@ -38,31 +38,11 @@ public class RedTeleop extends OpMode {
         DOWN,
     }
 
-
-    public enum LiftState {
-        LIFT_START,
-        LIFT_SCORE,
-        LIFT_DROPOFF,
-        EXTEND_RETRACT,
-        LIFT_DOWN,
-        WAIT
-    }
-
-    public enum IntakeState {
-        INTAKE_START,
-        INTAKE_UP,
-        INTAKE_LIFT_DOWN,
-        INTAKE_DROPOFF,
-        INTAKE_SCORE
-    }
-
     public enum DriveState {
         DRIVE_START,
         DRIVE_WAIT
     }
 
-    LiftState liftState = LiftState.LIFT_START;
-    IntakeState intakeState = IntakeState.INTAKE_START;
     RobotState robotState = RobotState.START;
     DriveState driveState = DriveState.DRIVE_START;
 
@@ -75,18 +55,12 @@ public class RedTeleop extends OpMode {
     public CRServo intakeMotor;
     private AnalogInput analogEncoder;
 
-    private DcMotorEx frontLeft;
-    private DcMotorEx backLeft;
-    private DcMotorEx frontRight;
-    private DcMotorEx backRight;
-
     Lift lift;
     Extend extend;
     Intake intake;
 
 
     ElapsedTime actionTimer = new ElapsedTime();
-    ElapsedTime intakeTimer = new ElapsedTime();
 
     private boolean leftStickPressed = false;
     private boolean rightStickPressed = false;
@@ -113,10 +87,6 @@ public class RedTeleop extends OpMode {
         rotateMotorOne = hardwareMap.get(Servo.class, "rotateMotorOne");
         rotateMotorTwo = hardwareMap.get(Servo.class, "rotateMotorTwo");
         intakeMotor = hardwareMap.get(CRServo.class, "intakeMotor");
-        frontLeft = hardwareMap.get(DcMotorEx.class, "left_front");
-        frontRight = hardwareMap.get(DcMotorEx.class, "right_front");
-        backLeft = hardwareMap.get(DcMotorEx.class, "left_back");
-        backRight = hardwareMap.get(DcMotorEx.class, "right_back");
 
         lift = new Lift(liftMotorOne, liftMotorTwo, analogEncoder, extendMotorTwo);
         extend = new Extend(extendMotorOne, extendMotorTwo);
@@ -127,18 +97,7 @@ public class RedTeleop extends OpMode {
         follower.startTeleopDrive();
         actionTimer.reset();
     }
-    /*
-    Lt mid distance (done)
-    LB max distance out (done)
-    LSB intake running and intake flip down (done)
-    RSB eject (done)
 
-    D-pad up get ready for climb (need to test climb first)
-    D-pad down Climb (need to test climb first)
-    A button retract and flip up intake (done, also works for retracting when grabbing sample)
-
-    Right bumper: HANG
-     */
     @Override
     public void start() {
         follower.startTeleopDrive();
@@ -159,7 +118,7 @@ public class RedTeleop extends OpMode {
                     extend.setTarget(40);
                     actionTimer.reset();
                     robotState = RobotState.DROPOFF;
-                } else if (gamepad1.cross) {
+                } else if (gamepad1.cross && !crossPressed) {
                     if (lift.getTarget() > ANGLE_ZERO + 10) {
                         extend.setTarget(EXTEND_ZERO);
                     } else {
