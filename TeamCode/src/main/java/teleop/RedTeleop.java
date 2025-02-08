@@ -106,6 +106,7 @@ public class RedTeleop extends OpMode {
         com.pedropathing.util.Constants.setConstants(FConstants.class, LConstants.class);
         follower = new Follower(hardwareMap);
         follower.setStartingPose(scorePose);
+        follower.startTeleopDrive();
         actionTimer.reset();
     }
     /*
@@ -252,6 +253,14 @@ public class RedTeleop extends OpMode {
                 break;
 
             case DRIVE_WAIT:
+                // does not work... just slows it down a bit
+                if (follower.isBusy()) {
+                    if (gamepad2.right_trigger > 0.5) {
+                        follower.breakFollowing();
+                        follower.startTeleopDrive();
+                        driveState = DriveState.DRIVE_START;
+                    }
+                }
                 if (!follower.isBusy()) {
                     follower.breakFollowing();
                     follower.startTeleopDrive();
@@ -285,39 +294,17 @@ public class RedTeleop extends OpMode {
         rightBumperPressed = gamepad1.right_bumper;
         trianglePressed = gamepad2.triangle;
 
-        // Drive logic (unchanged)
-        double y = -gamepad2.left_stick_y;
-        double x = gamepad2.left_stick_x * 1.1;
-        double rx = gamepad2.right_stick_x;
+        // does not work
 
-        // allowing driver to drive (hopefully) in the middle of auto drive back
+        //        if (gamepad2.left_trigger > 0.5) {
+//            follower.setMaxPower(0.5);
+//        } else {
+//            follower.setMaxPower(1);
+//        }
 
-        if (Math.abs(y) > 0.2 || Math.abs(x) > 0.2 || Math.abs(rx) > 0.2) {
-            follower.breakFollowing();
-            driveState = DriveState.DRIVE_START;
-        }
-
-        double denominator = Math.max(Math.abs(y) + Math.abs(x) + Math.abs(rx), 1);
-        double frontLeftPower = (y + x + rx) / denominator;
-        double backLeftPower = (y - x + rx) / denominator;
-        double frontRightPower = (y - x - rx) / denominator;
-        double backRightPower = (y + x - rx) / denominator;
-
-        // slow mo
-        boolean lowPower = gamepad2.left_trigger > 0.5;
-        // follower.setMaxPower(0.5) else follower.setMaxPower(1)
-
-        // i think this will solve the conflicting issues
         if (!follower.isBusy()) {
             follower.setTeleOpMovementVectors(-gamepad2.left_stick_y, -gamepad2.left_stick_x, -gamepad2.right_stick_x, true);
-//            frontLeft.setPower(lowPower ? 0.5 * frontLeftPower : frontLeftPower);
-//            backLeft.setPower(lowPower ? 0.5 * backLeftPower : backLeftPower);
-//            frontRight.setPower(lowPower ? 0.5 * -frontRightPower : -frontRightPower);
-//            backRight.setPower(lowPower ? 0.5 * -backRightPower : -backRightPower);
         }
-        telemetry.addData("TeleOp Y", -gamepad2.left_stick_y);
-        telemetry.addData("TeleOp X", -gamepad2.left_stick_x);
-        telemetry.addData("TeleOp RX", -gamepad2.right_stick_x);
         telemetry.update();
         follower.update();
 

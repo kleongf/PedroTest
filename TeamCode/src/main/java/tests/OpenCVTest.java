@@ -1,5 +1,6 @@
 package tests;
 
+import com.acmerobotics.dashboard.FtcDashboard;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
@@ -30,8 +31,10 @@ public class OpenCVTest extends LinearOpMode
     public void runOpMode()
     {
         phoneCam = OpenCvCameraFactory.getInstance().createWebcam(hardwareMap.get(WebcamName.class, "Webcam 1"));
+        FtcDashboard.getInstance().startCameraStream(phoneCam, 0);
         YellowPipeline yellowPipeline = new YellowPipeline();
         phoneCam.openCameraDeviceAsync(new OpenCvCamera.AsyncCameraOpenListener()
+
         {
             @Override
             public void onOpened()
@@ -71,8 +74,7 @@ public class OpenCVTest extends LinearOpMode
             telemetry.addData("Pipeline time ms", phoneCam.getPipelineTimeMs());
             telemetry.addData("Overhead time ms", phoneCam.getOverheadTimeMs());
             telemetry.addData("Theoretical max FPS", phoneCam.getCurrentPipelineMaxFps());
-            telemetry.addData("X", yellowPipeline.getClosest()[0]);
-            telemetry.addData("Y", yellowPipeline.getClosest()[1]);
+            telemetry.addData("Object In Center", yellowPipeline.isBlockDetected());
             telemetry.update();
         }
     }

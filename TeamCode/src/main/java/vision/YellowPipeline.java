@@ -1,81 +1,57 @@
 package vision;
 
-import static org.firstinspires.ftc.robotcore.external.BlocksOpModeCompanion.telemetry;
-
-import org.opencv.core.Mat;
-import org.opencv.core.Point;
-import org.opencv.core.Scalar;
-import org.opencv.imgproc.Imgproc;
-import org.openftc.easyopencv.OpenCvPipeline;
 import org.opencv.core.*;
-
-import java.util.ArrayList;
-import java.util.List;
+import org.opencv.imgproc.Imgproc;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import org.openftc.easyopencv.OpenCvPipeline;
 
 public class YellowPipeline extends OpenCvPipeline {
-    Scalar LOWER_YELLOW = new Scalar(10, 100, 100);
-    Scalar UPPER_YELLOW = new Scalar(40, 255, 255);
+    // Adjusted HSV range for better yellow detection
+    private static final Scalar LOWER_YELLOW = new Scalar(20, 170, 170);  // Less sensitive to reds and blues
+    private static final Scalar UPPER_YELLOW = new Scalar(40, 255, 255);  // More strictly within yellow range
 
-    double[][] homographyMatrix = {
-            {1.2, 0.0, -100},
-            {0.0, 1.2, -50},
-            {0.0, 0.0, 1.0}
-    };
+    // ROI bounds
+    private static final int ROI_X_START = 200;
+    private static final int ROI_X_END = 440;
+    private static final int ROI_Y_START = 140;
+    private static final int ROI_Y_END = 340;
 
-    private double[] applyHomography(double centerX, double centerY) {
-        double worldX = (homographyMatrix[0][0] * centerX + homographyMatrix[0][1] * centerY + homographyMatrix[0][2]) /
-                (homographyMatrix[2][0] * centerX + homographyMatrix[2][1] * centerY + homographyMatrix[2][2]);
-        double worldY = (homographyMatrix[1][0] * centerX + homographyMatrix[1][1] * centerY + homographyMatrix[1][2]) /
-                (homographyMatrix[2][0] * centerX + homographyMatrix[2][1] * centerY + homographyMatrix[2][2]);
-        return new double[]{worldX, worldY};
-    }
+    private Mat hsvMat = new Mat();
+    private Mat thresholdMat = new Mat();
 
-    private double[] closestContour = new double[2];
+    private boolean yellowPixelDetected = false;
 
     @Override
     public Mat processFrame(Mat input) {
-        Mat imgHSV = new Mat();
-        Imgproc.cvtColor(input, imgHSV, Imgproc.COLOR_RGB2HSV);
+        // Reset detection flag
+        yellowPixelDetected = false;
 
-        Mat imgThreshold = new Mat();
-        Core.inRange(imgHSV, LOWER_YELLOW, UPPER_YELLOW, imgThreshold);
+        // Convert frame to HSV color space
+        Imgproc.cvtColor(input, hsvMat, Imgproc.COLOR_RGB2HSV);
 
-        Mat kernel = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(5, 5));
-        Imgproc.morphologyEx(imgThreshold, imgThreshold, Imgproc.MORPH_OPEN, kernel);
+        // Threshold image to get only yellow colors (more strict range)
+        Core.inRange(hsvMat, LOWER_YELLOW, UPPER_YELLOW, thresholdMat);
 
-        List<MatOfPoint> contours = new ArrayList<>();
-        Mat hierarchy = new Mat();
-        Imgproc.findContours(imgThreshold, contours, hierarchy, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
+        // Extract region of interest (ROI) from thresholded image
+        Rect roi = new Rect(ROI_X_START, ROI_Y_START, ROI_X_END - ROI_X_START, ROI_Y_END - ROI_Y_START);
+        Mat roiMat = thresholdMat.submat(roi);
 
-        double minDistance = Double.MAX_VALUE;
+        // Check if any yellow pixels are detected in the ROI
+        if (Core.countNonZero(roiMat) > 100) {
+            yellowPixelDetected = true;
 
-        if (contours.isEmpty()) {
-            closestContour[0] = -100;
-            closestContour[1] = -100;
-        } else {
-            for (MatOfPoint contour : contours) {
-                if (Imgproc.contourArea(contour) > 500) {
-                    Rect rect = Imgproc.boundingRect(contour);
-                    if (rect.width > rect.height) {
-                        Point center = new Point(rect.x + rect.width / 2.0, rect.y + rect.height / 2.0);
-                        double[] worldCoords = applyHomography(center.x, center.y);
-                        double distance = Math.hypot(worldCoords[0], worldCoords[1]);
-                        if (distance < minDistance) {
-                            minDistance = distance;
-                            closestContour[0] = worldCoords[0];
-                            closestContour[1] = worldCoords[1];
-                        }
-                    }
-                }
-            }
+            // Draw a rectangle around the ROI on the input frame
+            Imgproc.rectangle(input, roi.tl(), roi.br(), new Scalar(0, 255, 255), 2);
         }
 
-        telemetry.addData("Closest World X", closestContour[0]);
-        telemetry.addData("Closest World Y", closestContour[1]);
+        // Return the processed frame
         return input;
     }
 
-    public double[] getClosest() {
-        return closestContour;
+    /**
+     * Returns true if at least one yellow pixel is detected within the ROI.
+     */
+    public boolean isBlockDetected() {
+        return yellowPixelDetected;
     }
 }
