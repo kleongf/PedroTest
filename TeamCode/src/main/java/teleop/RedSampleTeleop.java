@@ -2,10 +2,7 @@ package teleop;
 
 import com.pedropathing.follower.Follower;
 import com.pedropathing.localization.Pose;
-import com.pedropathing.localization.PoseUpdater;
 import com.pedropathing.pathgen.BezierCurve;
-import com.pedropathing.pathgen.BezierLine;
-import com.pedropathing.pathgen.Path;
 import com.pedropathing.pathgen.PathChain;
 import com.pedropathing.pathgen.Point;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
@@ -18,14 +15,13 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 
 import pedroPathing.constants.FConstants;
 import pedroPathing.constants.LConstants;
-import shared.Constants;
 import shared.Extend;
 import shared.Intake;
 import shared.Lift;
 import static shared.Constants.* ;
 
-@TeleOp(name = "Red TeleOp")
-public class RedSpecTeleop extends OpMode {
+@TeleOp(name = "Red Sample TeleOp")
+public class RedSampleTeleop extends OpMode {
 
     public enum LiftState {
         LIFT_START,
@@ -279,6 +275,8 @@ public class RedSpecTeleop extends OpMode {
             extend.setTarget(extend.getTarget() - TRIM_AMOUNT);
         }
 
+        double speed = gamepad2.left_trigger > 0.5 ? 0.5 : 1;
+
         extend.loop();
         lift.loop();
         intake.loop();
@@ -294,16 +292,9 @@ public class RedSpecTeleop extends OpMode {
         rightBumperPressed = gamepad1.right_bumper;
         trianglePressed = gamepad2.triangle;
 
-        // does not work
-
-        //        if (gamepad2.left_trigger > 0.5) {
-//            follower.setMaxPower(0.5);
-//        } else {
-//            follower.setMaxPower(1);
-//        }
 
         if (!follower.isBusy()) {
-            follower.setTeleOpMovementVectors(-gamepad2.left_stick_y, -gamepad2.left_stick_x, -gamepad2.right_stick_x, true);
+            follower.setTeleOpMovementVectors(-gamepad2.left_stick_y * speed, -gamepad2.left_stick_x * speed, -gamepad2.right_stick_x * speed, true);
         }
         telemetry.update();
         follower.update();

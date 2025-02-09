@@ -6,11 +6,10 @@ public final class Constants {
     // maybe we put poses in here?
 
     // AUTONOMOUS
-    // TODO: Change these angles to be updated to current offset of 10
     public static final double ANGLE_DOWN_AUTO = 8;
     public static final int ANGLE_UP_AUTO = 110;
     public static final int EXTEND_HIGH_AUTO = 710;
-    public static final int EXTEND_DEFAULT_AUTO = 40;
+    public static final int EXTEND_DEFAULT_AUTO = 600;
 
     // TELEOP
     public static final int ANGLE_UP = 108;

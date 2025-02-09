@@ -1,5 +1,6 @@
 package tests;
 
+import com.acmerobotics.dashboard.FtcDashboard;
 import com.pedropathing.pathgen.BezierPoint;
 import com.pedropathing.util.Constants;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
@@ -22,14 +23,20 @@ import pedroPathing.constants.LConstants;
 import shared.Extend;
 import shared.Intake;
 import shared.Lift;
+import vision.YellowPipeline;
+
 import static shared.Constants.*;
+
+import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
+import org.openftc.easyopencv.OpenCvCamera;
+import org.openftc.easyopencv.OpenCvCameraFactory;
+import org.openftc.easyopencv.OpenCvCameraRotation;
 
 @Autonomous(name = "Autonomous Red Claw CV Testing")
 public class RedSampleClawCV extends OpMode {
     private Follower follower;
     private Timer pathTimer, actionTimer, opmodeTimer;
     private int pathState;
-
 
     /** Start Pose of our robot */
     private final Pose startPose = new Pose(135, 32, Math.toRadians(180));
@@ -66,6 +73,9 @@ public class RedSampleClawCV extends OpMode {
     Lift lift;
     Extend extend;
     Intake intake;
+
+    OpenCvCamera phoneCam;
+    YellowPipeline yellowPipeline;
 
     public void score() {
         if (actionTimer.getElapsedTimeSeconds() < 0.3) {
@@ -145,7 +155,7 @@ public class RedSampleClawCV extends OpMode {
                     } else if (actionTimer.getElapsedTimeSeconds() < 1) {
                         extend.setTarget(0);
                     } else if (actionTimer.getElapsedTimeSeconds() < 1.2) {
-                        follower.holdPoint(scorePose);
+                        follower.turnToDegrees(135);
                         actionTimer.resetTimer();
                         setPathState(3);
                     }
@@ -177,7 +187,7 @@ public class RedSampleClawCV extends OpMode {
                     } else if (actionTimer.getElapsedTimeSeconds() < 1) {
                         extend.setTarget(0);
                     } else if (actionTimer.getElapsedTimeSeconds() < 1.2) {
-                        follower.holdPoint(scorePose);
+                        follower.turnToDegrees(135);
                         actionTimer.resetTimer();
                         setPathState(5);
                     }
@@ -205,17 +215,93 @@ public class RedSampleClawCV extends OpMode {
                     if (actionTimer.getElapsedTimeSeconds() < 0.3) {
                         extend.setTarget(600);
                     } else if (actionTimer.getElapsedTimeSeconds() < 0.6) {
+                        // maybe lift down?
                         intake.IntakeForward();
                     } else if (actionTimer.getElapsedTimeSeconds() < 1) {
                         extend.setTarget(0);
                     } else if (actionTimer.getElapsedTimeSeconds() < 1.2) {
-                        follower.holdPoint(scorePose);
+                        follower.turnToDegrees(135);
                         actionTimer.resetTimer();
                         setPathState(7);
                     }
                 }
                 break;
             case 7:
+                if (follower.isBusy()) {
+                    actionTimer.resetTimer();
+                }
+                if(!follower.isBusy()) {
+                    /* Score Sample */
+                    score();
+                    /* Since this is a pathChain, we can have Pedro hold the end point while we are grabbing the sample */
+                    if (actionTimer.getElapsedTimeSeconds() > 2.4) {
+                        setPathState(8);
+                    }
+                }
+                break;
+            case 8:
+                lift.setTarget(ANGLE_ZERO);
+                follower.followPath(goToSubmersible, false);
+                setPathState(9);
+                break;
+            case 9:
+                if (!follower.isBusy()) {
+                    extend.setTarget(400);
+                    // slowing it down but maybe it can go faster
+                    follower.setMaxPower(0.36);
+                    follower.followPath(trimY, true);
+                    setPathState(10);
+                }
+                break;
+            case 10:
+                if (follower.isBusy()) {
+                    if (yellowPipeline.isBlockDetected()) {
+                        scorePickup = follower.pathBuilder()
+                                .addPath(
+                                        new BezierCurve(
+                                                new Point(follower.getPose()),
+                                                new Point(75, 23, Point.CARTESIAN),
+                                                new Point(scorePose)
+                                        )
+                                )
+                                .setLinearHeadingInterpolation(follower.getPose().getHeading(), scorePose.getHeading())
+                                .build();
+                        follower.breakFollowing();
+                        actionTimer.resetTimer();
+                        setPathState(11);
+                    }
+                } else {
+                    scorePickup = follower.pathBuilder()
+                            .addPath(
+                                    new BezierCurve(
+                                            new Point(follower.getPose()),
+                                            new Point(75, 23, Point.CARTESIAN),
+                                            new Point(scorePose)
+                                    )
+                            )
+                            .setLinearHeadingInterpolation(follower.getPose().getHeading(), scorePose.getHeading())
+                            .build();
+                    follower.breakFollowing();
+                    actionTimer.resetTimer();
+                    setPathState(11);
+                }
+                break;
+            case 11:
+                // TODO: SPIN TO CORRECT ORIENTATION based on yellow pipeline output
+                // if (yellowPipeline.getOrientation() == 1) {spin horizontal}
+                if (actionTimer.getElapsedTimeSeconds() < 0.3)
+                    lift.setTarget(9);
+                if (actionTimer.getElapsedTimeSeconds() < 1) {
+                    lift.setTarget(ANGLE_ZERO);
+                } else if (actionTimer.getElapsedTimeSeconds() < 1.3) {
+                    extend.setTarget(0);
+                    follower.setMaxPower(1);
+                    follower.followPath(scorePickup);
+                    actionTimer.resetTimer();
+                    setPathState(12);
+                }
+                break;
+            case 12:
                 if (follower.isBusy()) {
                     actionTimer.resetTimer();
                 }
@@ -249,13 +335,12 @@ public class RedSampleClawCV extends OpMode {
         intake.loop();
         lift.loop();
         extend.loop();
-        // detector.loop();
 
         // Feedback to Driver Hub
-        telemetry.addData("path state", pathState);
-        telemetry.addData("x", follower.getPose().getX());
-        telemetry.addData("y", follower.getPose().getY());
-        telemetry.addData("heading", follower.getPose().getHeading());
+        telemetry.addData("Busy", follower.isBusy());
+        telemetry.addData("Detected", yellowPipeline.isBlockDetected());
+        telemetry.addData("Orientation", yellowPipeline.getOrientation());
+        telemetry.addData("Timer", actionTimer.getElapsedTimeSeconds());
         telemetry.addData("busy", follower.isBusy());
         telemetry.update();
     }
@@ -284,6 +369,25 @@ public class RedSampleClawCV extends OpMode {
         Constants.setConstants(FConstants.class, LConstants.class);
         follower = new Follower(hardwareMap);
         follower.setStartingPose(startPose);
+
+        phoneCam = OpenCvCameraFactory.getInstance().createWebcam(hardwareMap.get(WebcamName.class, "Webcam 1"));
+        FtcDashboard.getInstance().startCameraStream(phoneCam, 0);
+        yellowPipeline = new YellowPipeline();
+        phoneCam.openCameraDeviceAsync(new OpenCvCamera.AsyncCameraOpenListener()
+        {
+            @Override
+            public void onOpened()
+            {
+                phoneCam.setPipeline(yellowPipeline);
+                phoneCam.startStreaming(640, 480, OpenCvCameraRotation.UPRIGHT);
+            }
+
+            @Override
+            public void onError(int errorCode)
+            {
+                telemetry.addLine("Error");
+            }
+        });
     }
 
     /** This method is called continuously after Init while waiting for "play". **/
