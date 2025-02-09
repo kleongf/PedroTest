@@ -2,8 +2,6 @@ package tests;
 
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.pedropathing.util.Constants;
-import com.qualcomm.hardware.limelightvision.LLResult;
-import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.pedropathing.follower.Follower;
@@ -99,7 +97,7 @@ public class RedSampleOpenCV extends OpMode {
                 break;
             case 1:
                 if (!follower.isBusy()) {
-                    extend.setTarget(550);
+                    extend.setTarget(400);
                     // slowing it down
                     follower.setMaxPower(0.36);
                     follower.followPath(trimY, true);
@@ -108,9 +106,7 @@ public class RedSampleOpenCV extends OpMode {
                 break;
             case 2:
                 if (follower.isBusy()) {
-                    telemetry.addData("Detected", yellowPipeline.isBlockDetected());
                     if (yellowPipeline.isBlockDetected()) {
-                        lift.setTarget(9);
                         scorePickup = follower.pathBuilder()
                                 .addPath(
                                         new BezierCurve(
@@ -122,14 +118,10 @@ public class RedSampleOpenCV extends OpMode {
                                 .setLinearHeadingInterpolation(follower.getPose().getHeading(), scorePose.getHeading())
                                 .build();
                         follower.breakFollowing();
-                        follower.setMaxPower(1);
                         actionTimer.resetTimer();
-                        follower.followPath(scorePickup);
                         setPathState(3);
                     }
                 } else {
-                    actionTimer.resetTimer();
-                    lift.setTarget(9);
                     scorePickup = follower.pathBuilder()
                             .addPath(
                                     new BezierCurve(
@@ -140,20 +132,25 @@ public class RedSampleOpenCV extends OpMode {
                             )
                             .setLinearHeadingInterpolation(follower.getPose().getHeading(), scorePose.getHeading())
                             .build();
-                    follower.setMaxPower(1);
-                    follower.followPath(scorePickup);
                     actionTimer.resetTimer();
                     setPathState(3);
                 }
                 break;
             case 3:
-                if (follower.isBusy()) {
-                    if (actionTimer.getElapsedTime() < 0.3) {
+                    if (actionTimer.getElapsedTimeSeconds() < 0.3)
+                        lift.setTarget(9);
+                    if (actionTimer.getElapsedTimeSeconds() < 1) {
                         lift.setTarget(11);
-                    } else if (actionTimer.getElapsedTime() < 0.8) {
+                    } else if (actionTimer.getElapsedTimeSeconds() < 1.3) {
                         extend.setTarget(0);
+                        follower.setMaxPower(1);
+                        follower.followPath(scorePickup);
+                        actionTimer.resetTimer();
+                        setPathState(4);
                     }
-                } else {
+                break;
+            case 4:
+                if (!follower.isBusy()) {
                     setPathState(-1);
                 }
                 break;
@@ -179,6 +176,9 @@ public class RedSampleOpenCV extends OpMode {
         extend.loop();
 
         telemetry.addData("Busy", follower.isBusy());
+        telemetry.addData("Detected", yellowPipeline.isBlockDetected());
+        telemetry.addData("Orientation", yellowPipeline.getOrientation());
+        telemetry.addData("Timer", actionTimer.getElapsedTimeSeconds());
         telemetry.update();
     }
 

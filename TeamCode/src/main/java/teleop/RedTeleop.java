@@ -109,7 +109,7 @@ public class RedTeleop extends OpMode {
                 // right trigger: score
                 if (gamepad1.right_trigger > 0.5 && !rightTriggerPressed) {
                     lift.setTarget(105);
-                    // should go wayyyyy down
+                    // TODO: should go wayyyyy down
                     intake.IntakeDown();
                     actionTimer.reset();
                     robotState = RobotState.SCORE;
@@ -134,6 +134,7 @@ public class RedTeleop extends OpMode {
                     } else {
                         lift.setTarget(ANGLE_STOP_MIN);
                     }
+                    intake.IntakeDown();
                     intake.IntakeForward();
                     actionTimer.reset();
                     robotState = RobotState.DOWN;

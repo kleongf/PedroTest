@@ -43,4 +43,20 @@ public class Extend {
         motorTwo.setPower(-power);
         motorOne.setPower(-power);
     }
+
+    // hopefully these will be useful in auto and teleop trimming
+
+    public void loopForward() {
+        if (motorTwo.getCurrentPosition() < 700) {
+            motorOne.setPower(-0.2);
+            motorTwo.setPower(-0.2);
+        }
+    }
+
+    public void loopBackward() {
+        if (motorTwo.getCurrentPosition() > 10) {
+            motorOne.setPower(0.2);
+            motorTwo.setPower(0.2);
+        }
+    }
 }

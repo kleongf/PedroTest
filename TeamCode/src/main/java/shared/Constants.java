@@ -7,16 +7,16 @@ public final class Constants {
 
     // AUTONOMOUS
     // TODO: Change these angles to be updated to current offset of 10
-    public static final double ANGLE_DOWN_AUTO = 5;
+    public static final double ANGLE_DOWN_AUTO = 8;
     public static final int ANGLE_UP_AUTO = 110;
     public static final int EXTEND_HIGH_AUTO = 710;
     public static final int EXTEND_DEFAULT_AUTO = 40;
 
     // TELEOP
-    public static final int ANGLE_UP = 100;
+    public static final int ANGLE_UP = 108;
     public static final int ANGLE_ZERO = 11;
     public static final int ANGLE_HANG = 110;
-    public static final double ANGLE_MID = 8;
+    public static final double ANGLE_MID = 9;
     // problem is that extension might be a bit too long, angle stops working
     // find another extension that might work
     public static final double ANGLE_MAX = 10;
@@ -30,7 +30,7 @@ public final class Constants {
     public static final int EXTEND_STOP_MAX = 760; // made larger for climb
     public static final int EXTEND_STOP_MIN = 0;
     public static final int ANGLE_STOP_MAX = 120;
-    public static final int ANGLE_STOP_MIN = 3;
+    public static final int ANGLE_STOP_MIN = 5;
 
     // INTAKE
     public static final double SERVO_UP = 0.8;

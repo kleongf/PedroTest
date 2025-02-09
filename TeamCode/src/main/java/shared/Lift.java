@@ -42,7 +42,8 @@ public class Lift {
     public double getTarget() { return target; }
 
     public void loop() {
-        double multiplier = 1 + (extendMotor.getCurrentPosition() / 700.0) * 1.7;
+        // was 1 and 1.5
+        double multiplier = 0.8 + (extendMotor.getCurrentPosition() / 700.0) * 1.7;
         // double multiplier = 0.3 (extendMotor.getCurrentPosition() / 700.0) * 2.5;
         double armPos = ((encoder.getVoltage() / 3.235 * 360) + offset + inherentOffset) % 360;
         double pid = controller.calculate(armPos, target);
