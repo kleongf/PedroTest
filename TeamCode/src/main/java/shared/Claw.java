@@ -1,29 +1,48 @@
 package shared;
 
+import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 import static shared.Constants.*;
 
 public class Claw {
+    public enum GrabState {
+        CLOSED, OPEN
+    }
+
+    public enum PivotState {
+        SCORE, SUBMERSIBLE_DOWN, DROP_OFF, SUBMERSIBLE_UP
+    }
+
+    public enum RotateState {
+        VERTICAL, HORIZONTAL
+    }
+
     private final Servo angleMotorOne;
     private final Servo angleMotorTwo;
     private final Servo intakeMotor;
     private final Servo spinMotor;
 
-    public Claw(Servo angleMotorOne, Servo angleMotorTwo, Servo intakeMotor, Servo spinMotor) {
-        this.angleMotorOne = angleMotorOne;
-        this.angleMotorTwo = angleMotorTwo;
-        this.intakeMotor = intakeMotor;
-        this.spinMotor = spinMotor;
-        angleMotorOne.setPosition(SERVO_UP);
-        angleMotorTwo.setPosition(SERVO_UP);
-        intakeMotor.setPosition(0);
-        spinMotor.setPosition(0);
+    public GrabState grabState;
+    public RotateState rotateState;
+    public PivotState pivotState;
+
+
+    public Claw(HardwareMap hardwareMap, GrabState grabState, PivotState pivotState, RotateState rotateState) {
+        this.angleMotorOne = hardwareMap.get(Servo.class, "angleMotorOne");
+        this.angleMotorTwo = hardwareMap.get(Servo.class, "angleMotorTwo");
+        this.intakeMotor = hardwareMap.get(Servo.class, "intakeMotor");
+        this.spinMotor = hardwareMap.get(Servo.class, "spinMotor");
+
+        this.grabState = grabState;
+        this.rotateState = rotateState;
+        this.pivotState = pivotState;
     }
 
-    public void tighten() {
+
+    public void close() {
         intakeMotor.setPosition(1);
     }
-    public void release() {
+    public void open() {
         intakeMotor.setPosition(0);
     }
 
@@ -36,15 +55,62 @@ public class Claw {
         spinMotor.setPosition(0);
     }
 
-    public void loop() {}
-
-    public void clawUp() {
-        angleMotorOne.setPosition(SERVO_UP);
-        angleMotorTwo.setPosition(SERVO_UP);
+    public void score() {
+        angleMotorOne.setPosition(0.8);
+        angleMotorTwo.setPosition(0.8);
     }
 
-    public void clawDown() {
+    public void submersibleDown() {
         angleMotorOne.setPosition(0.24);
         angleMotorTwo.setPosition(0.24);
+    }
+
+    public void submersibleUp() {
+        angleMotorOne.setPosition(0.5);
+        angleMotorTwo.setPosition(0.5);
+    }
+
+    public void dropOff() {
+        angleMotorOne.setPosition(0);
+        angleMotorTwo.setPosition(0);
+    }
+
+    public void setGrabState(GrabState grabState) {
+        switch (grabState) {
+            case CLOSED:
+                close();
+                break;
+            case OPEN:
+                open();
+                break;
+        }
+    }
+
+    public void setRotateState(RotateState rotateState) {
+        switch (rotateState) {
+            case HORIZONTAL:
+                spinHorizontal();
+                break;
+            case VERTICAL:
+                spinVertical();
+                break;
+        }
+    }
+
+    public void setPivotState(PivotState pivotState) {
+        switch (pivotState) {
+            case SCORE:
+                score();
+                break;
+            case SUBMERSIBLE_DOWN:
+                submersibleDown();
+                break;
+            case SUBMERSIBLE_UP:
+                submersibleUp();
+                break;
+            case DROP_OFF:
+                dropOff();
+                break;
+        }
     }
 }

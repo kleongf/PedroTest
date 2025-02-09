@@ -10,6 +10,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
@@ -55,11 +56,6 @@ public class RedSampleTeleop extends OpMode {
     public CRServo intakeMotor;
     private AnalogInput analogEncoder;
 
-    private DcMotorEx frontLeft;
-    private DcMotorEx backLeft;
-    private DcMotorEx frontRight;
-    private DcMotorEx backRight;
-
     Lift lift;
     Extend extend;
     Intake intake;
@@ -68,16 +64,7 @@ public class RedSampleTeleop extends OpMode {
     ElapsedTime actionTimer = new ElapsedTime();
     ElapsedTime intakeTimer = new ElapsedTime();
 
-    private boolean leftStickPressed = false;
-    private boolean rightStickPressed = false;
-    private boolean rightTriggerPressed = false;
-    private boolean leftBumperPressed = false;
-    private boolean crossPressed = false;
-    private boolean leftTriggerPressed = false;
-    private boolean rightBumperPressed = false;
-    private boolean dpadUpPressed = false;
-    private boolean dpadDownPressed = false;
-    private boolean trianglePressed = false;
+    private Gamepad currentGamepad1 = new Gamepad(), currentGamepad2 = new Gamepad(), previousGamepad1 = new Gamepad(), previousGamepad2 = new Gamepad();
 
     private Follower follower;
     private final Pose scorePose = new Pose(123.5, 18.5, Math.toRadians(135));
@@ -91,10 +78,6 @@ public class RedSampleTeleop extends OpMode {
         rotateMotorOne = hardwareMap.get(Servo.class, "rotateMotorOne");
         rotateMotorTwo = hardwareMap.get(Servo.class, "rotateMotorTwo");
         intakeMotor = hardwareMap.get(CRServo.class, "intakeMotor");
-        frontLeft = hardwareMap.get(DcMotorEx.class, "left_front");
-        frontRight = hardwareMap.get(DcMotorEx.class, "right_front");
-        backLeft = hardwareMap.get(DcMotorEx.class, "left_back");
-        backRight = hardwareMap.get(DcMotorEx.class, "right_back");
 
         lift = new Lift(liftMotorOne, liftMotorTwo, analogEncoder, extendMotorTwo);
         extend = new Extend(extendMotorOne, extendMotorTwo);
@@ -123,13 +106,18 @@ public class RedSampleTeleop extends OpMode {
     }
 
     public void loop() {
+        previousGamepad1.copy(currentGamepad1);
+        previousGamepad2.copy(currentGamepad2);
+        currentGamepad1.copy(gamepad1);
+        currentGamepad2.copy(gamepad2);
+
         switch (liftState) {
             case LIFT_START:
-                if (gamepad1.right_trigger > 0.5 && !rightTriggerPressed) {
+                if (gamepad1.right_trigger > 0.5 && previousGamepad1.right_trigger < 0.5) {
                     lift.setTarget(ANGLE_UP);
                     actionTimer.reset();
                     liftState = LiftState.LIFT_UP_HIGH;
-                } else if (gamepad1.cross && !crossPressed) {
+                } else if (gamepad1.cross && !previousGamepad1.cross) {
                     if (lift.getTarget() > ANGLE_ZERO + 10) {
                         extend.setTarget(EXTEND_ZERO);
                         actionTimer.reset();
@@ -139,11 +127,11 @@ public class RedSampleTeleop extends OpMode {
                         actionTimer.reset();
                         liftState = LiftState.LIFT_DOWN;
                     }
-                } else if (gamepad1.left_trigger > 0.5 && !leftTriggerPressed) {
+                } else if (gamepad1.left_trigger > 0.5 && previousGamepad1.left_trigger < 0.5) {
                     extend.setTarget(EXTEND_MID);
-                } else if (gamepad1.left_bumper && !leftBumperPressed) {
+                } else if (gamepad1.left_bumper && !previousGamepad1.left_bumper) {
                     extend.setTarget(EXTEND_MAX);
-                } else if (gamepad1.right_bumper && !rightBumperPressed) {
+                } else if (gamepad1.right_bumper && !previousGamepad1.right_bumper) {
                     lift.setTarget(ANGLE_HANG);
                     // we need to increase extension max for trimming
                 }
@@ -186,12 +174,12 @@ public class RedSampleTeleop extends OpMode {
 
         switch (intakeState) {
             case INTAKE_START:
-                if (gamepad1.left_stick_button && !leftStickPressed) {
+                if (gamepad1.left_stick_button && !previousGamepad1.left_stick_button) {
                     intake.IntakeForward();
                     intake.IntakeDown();
                     intakeTimer.reset();
                     intakeState = IntakeState.INTAKE_LIFT_DOWN;
-                } else if (gamepad1.right_stick_button && !rightStickPressed) {
+                } else if (gamepad1.right_stick_button && !previousGamepad1.right_stick_button) {
                     intake.IntakeReverse();
                     // then wait, then intake stop
                     intakeTimer.reset();
@@ -229,7 +217,7 @@ public class RedSampleTeleop extends OpMode {
 
         switch (driveState) {
             case DRIVE_START:
-                if (gamepad2.triangle && !trianglePressed) {
+                if (gamepad2.triangle && !previousGamepad2.triangle) {
                     Pose currentPose = follower.getPose();
                     PathChain goToBucket = follower.pathBuilder()
                             .addPath(
@@ -251,7 +239,7 @@ public class RedSampleTeleop extends OpMode {
             case DRIVE_WAIT:
                 // does not work... just slows it down a bit
                 if (follower.isBusy()) {
-                    if (gamepad2.right_trigger > 0.5) {
+                    if (gamepad2.right_trigger > 0.5 && previousGamepad2.right_trigger < 0.5) {
                         follower.breakFollowing();
                         follower.startTeleopDrive();
                         driveState = DriveState.DRIVE_START;
@@ -269,9 +257,9 @@ public class RedSampleTeleop extends OpMode {
         }
 
         // dpad trimming
-        if (gamepad2.dpad_up && !dpadUpPressed) {
+        if (gamepad2.dpad_up && !previousGamepad2.dpad_up) {
             extend.setTarget(extend.getTarget() + TRIM_AMOUNT);
-        } else if (gamepad2.dpad_down && !dpadDownPressed) {
+        } else if (gamepad2.dpad_down && !previousGamepad2.dpad_down) {
             extend.setTarget(extend.getTarget() - TRIM_AMOUNT);
         }
 
@@ -280,18 +268,6 @@ public class RedSampleTeleop extends OpMode {
         extend.loop();
         lift.loop();
         intake.loop();
-
-        rightTriggerPressed = gamepad1.right_trigger > 0.5;
-        leftBumperPressed = gamepad1.left_bumper;
-        leftStickPressed = gamepad1.left_stick_button;
-        rightStickPressed = gamepad1.right_stick_button;
-        leftTriggerPressed = gamepad1.left_trigger > 0.5;
-        crossPressed = gamepad1.cross;
-        dpadDownPressed = gamepad1.dpad_down;
-        dpadUpPressed = gamepad1.dpad_up;
-        rightBumperPressed = gamepad1.right_bumper;
-        trianglePressed = gamepad2.triangle;
-
 
         if (!follower.isBusy()) {
             follower.setTeleOpMovementVectors(-gamepad2.left_stick_y * speed, -gamepad2.left_stick_x * speed, -gamepad2.right_stick_x * speed, true);
