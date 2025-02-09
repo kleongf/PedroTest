@@ -1,53 +1,50 @@
 package shared;
 
-import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.Servo;
 import static shared.Constants.*;
 
 public class Claw {
-    private final Servo motorOne;
-    private final Servo motorTwo;
-    private final Servo ;
+    private final Servo angleMotorOne;
+    private final Servo angleMotorTwo;
+    private final Servo intakeMotor;
+    private final Servo spinMotor;
 
-    public Intake(Servo motorOne, Servo motorTwo, CRServo intakeMotor) {
-        this.motorOne = motorOne;
-        this.motorTwo = motorTwo;
+    public Claw(Servo angleMotorOne, Servo angleMotorTwo, Servo intakeMotor, Servo spinMotor) {
+        this.angleMotorOne = angleMotorOne;
+        this.angleMotorTwo = angleMotorTwo;
         this.intakeMotor = intakeMotor;
-        motorOne.setPosition(SERVO_UP);
-        motorTwo.setPosition(SERVO_UP);
+        this.spinMotor = spinMotor;
+        angleMotorOne.setPosition(SERVO_UP);
+        angleMotorTwo.setPosition(SERVO_UP);
+        intakeMotor.setPosition(0);
+        spinMotor.setPosition(0);
     }
 
-    public void IntakeForward() {
-        power = SERVO_FORWARD;
+    public void tighten() {
+        intakeMotor.setPosition(1);
+    }
+    public void release() {
+        intakeMotor.setPosition(0);
     }
 
-    public void IntakeReverse() {
-        power = SERVO_REVERSE;
+    public void spinHorizontal() {
+        // move to 90 degrees = 0.5
+        spinMotor.setPosition(0.5);
     }
 
-    public void IntakeStop() {
-        power = 0;
+    public void spinVertical() {
+        spinMotor.setPosition(0);
     }
 
-    public void loop() {
-        intakeMotor.setPower(power);
+    public void loop() {}
 
+    public void clawUp() {
+        angleMotorOne.setPosition(SERVO_UP);
+        angleMotorTwo.setPosition(SERVO_UP);
     }
 
-    public void IntakeUp() {
-        motorOne.setPosition(SERVO_UP);
-        motorTwo.setPosition(SERVO_UP);
+    public void clawDown() {
+        angleMotorOne.setPosition(0.24);
+        angleMotorTwo.setPosition(0.24);
     }
-
-    public void IntakeExtendMaxDown() {
-        motorOne.setPosition(0.4);
-        motorTwo.setPosition(0.4);
-    }
-
-    public void IntakeDown() {
-        // was 0.22
-        motorOne.setPosition(0.24);
-        motorTwo.setPosition(0.24);
-    }
-
 }
