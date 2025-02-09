@@ -24,7 +24,7 @@ import shared.Lift;
 import static shared.Constants.*;
 
 // TODO: Preset for which x-coordinates to go to (just copy from preset test)
-@Autonomous(name = "Autonomous Red Claw Testing")
+@Autonomous(name = "Autonomous Red Claw BAD")
 public class RedSampleClaw extends OpMode {
     private Follower follower;
     private Timer pathTimer, actionTimer, opmodeTimer;

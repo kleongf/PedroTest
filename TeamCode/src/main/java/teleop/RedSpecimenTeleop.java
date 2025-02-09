@@ -100,8 +100,6 @@ public class RedSpecimenTeleop extends OpMode {
         currentGamepad1.copy(gamepad1);
         currentGamepad2.copy(gamepad2);
 
-        // TODO: INTAKE ROTATION
-
         switch (liftState) {
             case LIFT_START:
                 if (gamepad1.right_trigger > 0.5 && previousGamepad1.right_trigger < 0.5) {

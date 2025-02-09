@@ -20,6 +20,7 @@ import com.qualcomm.robotcore.hardware.Servo;
 
 import pedroPathing.constants.FConstants;
 import pedroPathing.constants.LConstants;
+import shared.Claw;
 import shared.Extend;
 import shared.Intake;
 import shared.Lift;
@@ -55,8 +56,6 @@ public class RedSampleClawCV extends OpMode {
 
     private final Pose submersibleEndPose = new Pose(72, 52, Math.toRadians(90));
 
-
-
     private Path scorePreload, park;
     private PathChain grabPickup1, grabPickup2, grabPickup3, scorePickup1, scorePickup2, scorePickup3, trimY;
     private PathChain goToSubmersible, grabPickup, scorePickup;
@@ -72,7 +71,7 @@ public class RedSampleClawCV extends OpMode {
 
     Lift lift;
     Extend extend;
-    Intake intake;
+    Claw intake;
 
     OpenCvCamera phoneCam;
     YellowPipeline yellowPipeline;
@@ -83,15 +82,28 @@ public class RedSampleClawCV extends OpMode {
         } else if (actionTimer.getElapsedTimeSeconds() < 0.6) {
             extend.setTarget(EXTEND_HIGH_AUTO);
         } else if (actionTimer.getElapsedTimeSeconds() < 0.9) {
-            intake.IntakeUp();
+            intake.score();
         } else if (actionTimer.getElapsedTimeSeconds() < 1.2) {
-            intake.IntakeReverse();
+            intake.open();
         } else if (actionTimer.getElapsedTimeSeconds() < 1.5) {
-            intake.IntakeDown();
-        } else if (actionTimer.getElapsedTimeSeconds() < 1.8) {
             extend.setTarget(EXTEND_DEFAULT_AUTO);
-        } else if (actionTimer.getElapsedTimeSeconds() < 2.1) {
-            lift.setTarget(ANGLE_DOWN_AUTO);
+        } else if (actionTimer.getElapsedTimeSeconds() < 1.8) {
+            lift.setTarget(ANGLE_ZERO);
+            intake.submersibleDown();
+        }
+    }
+
+    public void grabBlock() {
+        if (actionTimer.getElapsedTimeSeconds() < 0.2) {
+            extend.setTarget(600);
+        } else if (actionTimer.getElapsedTimeSeconds() < 0.5) {
+            lift.setTarget(9.5);
+        } else if (actionTimer.getElapsedTimeSeconds() < 0.8) {
+            intake.close();
+        } else if (actionTimer.getElapsedTimeSeconds() < 1) {
+            lift.setTarget(ANGLE_ZERO);
+        } else if (actionTimer.getElapsedTimeSeconds() < 1.3) {
+            extend.setTarget(0);
         }
     }
 
@@ -148,13 +160,8 @@ public class RedSampleClawCV extends OpMode {
             case 2:
                 if (follower.isBusy()) {actionTimer.resetTimer();}
                 if (!follower.isBusy()) {
-                    if (actionTimer.getElapsedTimeSeconds() < 0.3) {
-                        extend.setTarget(600);
-                    } else if (actionTimer.getElapsedTimeSeconds() < 0.6) {
-                        intake.IntakeForward();
-                    } else if (actionTimer.getElapsedTimeSeconds() < 1) {
-                        extend.setTarget(0);
-                    } else if (actionTimer.getElapsedTimeSeconds() < 1.2) {
+                    grabBlock();
+                    if (actionTimer.getElapsedTimeSeconds() < 1.5) {
                         follower.turnToDegrees(135);
                         actionTimer.resetTimer();
                         setPathState(3);
@@ -180,13 +187,8 @@ public class RedSampleClawCV extends OpMode {
             case 4:
                 if (follower.isBusy()) {actionTimer.resetTimer();}
                 if (!follower.isBusy()) {
-                    if (actionTimer.getElapsedTimeSeconds() < 0.3) {
-                        extend.setTarget(600);
-                    } else if (actionTimer.getElapsedTimeSeconds() < 0.6) {
-                        intake.IntakeForward();
-                    } else if (actionTimer.getElapsedTimeSeconds() < 1) {
-                        extend.setTarget(0);
-                    } else if (actionTimer.getElapsedTimeSeconds() < 1.2) {
+                    grabBlock();
+                    if (actionTimer.getElapsedTimeSeconds() < 1.5) {
                         follower.turnToDegrees(135);
                         actionTimer.resetTimer();
                         setPathState(5);
@@ -212,14 +214,8 @@ public class RedSampleClawCV extends OpMode {
             case 6:
                 if (follower.isBusy()) {actionTimer.resetTimer();}
                 if (!follower.isBusy()) {
-                    if (actionTimer.getElapsedTimeSeconds() < 0.3) {
-                        extend.setTarget(600);
-                    } else if (actionTimer.getElapsedTimeSeconds() < 0.6) {
-                        // maybe lift down?
-                        intake.IntakeForward();
-                    } else if (actionTimer.getElapsedTimeSeconds() < 1) {
-                        extend.setTarget(0);
-                    } else if (actionTimer.getElapsedTimeSeconds() < 1.2) {
+                    grabBlock();
+                    if (actionTimer.getElapsedTimeSeconds() < 1.5) {
                         follower.turnToDegrees(135);
                         actionTimer.resetTimer();
                         setPathState(7);
@@ -246,7 +242,7 @@ public class RedSampleClawCV extends OpMode {
                 break;
             case 9:
                 if (!follower.isBusy()) {
-                    extend.setTarget(400);
+                    extend.setTarget(500);
                     // slowing it down but maybe it can go faster
                     follower.setMaxPower(0.36);
                     follower.followPath(trimY, true);
@@ -287,11 +283,12 @@ public class RedSampleClawCV extends OpMode {
                 }
                 break;
             case 11:
-                // TODO: SPIN TO CORRECT ORIENTATION based on yellow pipeline output
-                // if (yellowPipeline.getOrientation() == 1) {spin horizontal}
-                if (actionTimer.getElapsedTimeSeconds() < 0.3)
+                if (actionTimer.getElapsedTimeSeconds() < 0.3) {
+                    if (yellowPipeline.getOrientation() == 1) {intake.spinHorizontal();}
                     lift.setTarget(9);
-                if (actionTimer.getElapsedTimeSeconds() < 1) {
+                } else if (actionTimer.getElapsedTimeSeconds() < 0.6) {
+                    intake.close();
+                } else if (actionTimer.getElapsedTimeSeconds() < 1) {
                     lift.setTarget(ANGLE_ZERO);
                 } else if (actionTimer.getElapsedTimeSeconds() < 1.3) {
                     extend.setTarget(0);
@@ -327,12 +324,9 @@ public class RedSampleClawCV extends OpMode {
     /** This is the main loop of the OpMode, it will run repeatedly after clicking "Play". **/
     @Override
     public void loop() {
-
-        // These loop the movements of the robot
         follower.update();
         autonomousPathUpdate();
 
-        intake.loop();
         lift.loop();
         extend.loop();
 
@@ -364,7 +358,7 @@ public class RedSampleClawCV extends OpMode {
 
         lift = new Lift(liftMotorOne, liftMotorTwo, analogEncoder, extendMotorTwo);
         extend = new Extend(extendMotorOne, extendMotorTwo);
-        intake = new Intake(rotateMotorOne, rotateMotorTwo, intakeMotor);
+        intake = new Claw(hardwareMap);
 
         Constants.setConstants(FConstants.class, LConstants.class);
         follower = new Follower(hardwareMap);
@@ -408,3 +402,4 @@ public class RedSampleClawCV extends OpMode {
     public void stop() {
     }
 }
+
