@@ -5,37 +5,37 @@ import com.qualcomm.robotcore.hardware.Servo;
 import static shared.Constants.*;
 
 public class Claw {
-    public enum GrabState {
-        CLOSED, OPEN
-    }
-
-    public enum PivotState {
-        SCORE, SUBMERSIBLE_DOWN, DROP_OFF, SUBMERSIBLE_UP
-    }
-
-    public enum RotateState {
-        VERTICAL, HORIZONTAL
-    }
+//    public enum GrabState {
+//        CLOSED, OPEN
+//    }
+//
+//    public enum PivotState {
+//        SCORE, SUBMERSIBLE_DOWN, DROP_OFF, SUBMERSIBLE_UP
+//    }
+//
+//    public enum RotateState {
+//        VERTICAL, HORIZONTAL
+//    }
 
     private final Servo angleMotorOne;
     private final Servo angleMotorTwo;
     private final Servo intakeMotor;
     private final Servo spinMotor;
 
-    public GrabState grabState;
-    public RotateState rotateState;
-    public PivotState pivotState;
+//    public GrabState grabState;
+//    public RotateState rotateState;
+//    public PivotState pivotState;
 
 
-    public Claw(HardwareMap hardwareMap, GrabState grabState, PivotState pivotState, RotateState rotateState) {
+    public Claw(HardwareMap hardwareMap) {
         this.angleMotorOne = hardwareMap.get(Servo.class, "angleMotorOne");
         this.angleMotorTwo = hardwareMap.get(Servo.class, "angleMotorTwo");
         this.intakeMotor = hardwareMap.get(Servo.class, "intakeMotor");
         this.spinMotor = hardwareMap.get(Servo.class, "spinMotor");
 
-        this.grabState = grabState;
-        this.rotateState = rotateState;
-        this.pivotState = pivotState;
+        close();
+        submersibleUp();
+        spinVertical();
     }
 
 
@@ -75,42 +75,42 @@ public class Claw {
         angleMotorTwo.setPosition(0);
     }
 
-    public void setGrabState(GrabState grabState) {
-        switch (grabState) {
-            case CLOSED:
-                close();
-                break;
-            case OPEN:
-                open();
-                break;
-        }
-    }
-
-    public void setRotateState(RotateState rotateState) {
-        switch (rotateState) {
-            case HORIZONTAL:
-                spinHorizontal();
-                break;
-            case VERTICAL:
-                spinVertical();
-                break;
-        }
-    }
-
-    public void setPivotState(PivotState pivotState) {
-        switch (pivotState) {
-            case SCORE:
-                score();
-                break;
-            case SUBMERSIBLE_DOWN:
-                submersibleDown();
-                break;
-            case SUBMERSIBLE_UP:
-                submersibleUp();
-                break;
-            case DROP_OFF:
-                dropOff();
-                break;
-        }
-    }
+//    public void setGrabState(GrabState grabState) {
+//        switch (grabState) {
+//            case CLOSED:
+//                close();
+//                break;
+//            case OPEN:
+//                open();
+//                break;
+//        }
+//    }
+//
+//    public void setRotateState(RotateState rotateState) {
+//        switch (rotateState) {
+//            case HORIZONTAL:
+//                spinHorizontal();
+//                break;
+//            case VERTICAL:
+//                spinVertical();
+//                break;
+//        }
+//    }
+//
+//    public void setPivotState(PivotState pivotState) {
+//        switch (pivotState) {
+//            case SCORE:
+//                score();
+//                break;
+//            case SUBMERSIBLE_DOWN:
+//                submersibleDown();
+//                break;
+//            case SUBMERSIBLE_UP:
+//                submersibleUp();
+//                break;
+//            case DROP_OFF:
+//                dropOff();
+//                break;
+//        }
+//    }
 }
