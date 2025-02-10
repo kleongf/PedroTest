@@ -23,7 +23,7 @@ import shared.Intake;
 import shared.Lift;
 import static shared.Constants.* ;
 
-@TeleOp(name = "Red samples")
+@TeleOp(name = "Red sample Teleop")
 public class RedSample extends OpMode {
     public enum LiftState {
         LIFT_START,
@@ -178,6 +178,10 @@ public class RedSample extends OpMode {
 
             case INTAKE_LIFT_DOWN:
                 if (intakeTimer.seconds() >= 0.3) {
+                    // TODO: we need one function for all of these once we tune pivot
+                    // it should consistently move the arm down the correct amount
+                    // 10-arctan(1/(extend.getTarget()/ticksperinch))
+                    // watch out for div 0 errors if target is 0
                     if (extend.getTarget() <= EXTEND_MID && extend.getTarget() > 0) {
                         lift.setTarget(ANGLE_MID);
                     } else if (extend.getTarget() <= EXTEND_MAX && extend.getTarget() > EXTEND_MID) {
@@ -243,21 +247,21 @@ public class RedSample extends OpMode {
             default:
                 driveState = DriveState.DRIVE_START;
         }
-
-        // dpad trimming
-        if (gamepad2.dpad_up && !previousGamepad2.dpad_up) {
-            extend.setTarget(extend.getTarget() + TRIM_AMOUNT);
-        } else if (gamepad2.dpad_down && !previousGamepad2.dpad_down) {
-            extend.setTarget(extend.getTarget() - TRIM_AMOUNT);
+        // TODO: Test new trimming
+        // dpad trimming: hopefully new code works? did not change for spec yet
+        if (gamepad2.dpad_up) {
+            extend.manual(1);
+        } else if (gamepad2.dpad_down) {
+            extend.manual(-1);
+        }
+        // on release: hold the current position
+        if ((!gamepad2.dpad_up && previousGamepad2.dpad_up) || (!gamepad2.dpad_down && previousGamepad2.dpad_down)) {
+            extend.setTarget(extend.getCurrentPosition());
         }
 
-        // toggle direction: move left: horizontal, move up: vertical
-        // maybe this should work for both sticks?
-        if (Math.abs(gamepad1.left_stick_y) > 0.8) {
-            intake.spinHorizontal();
-        } else if (Math.abs(gamepad1.left_stick_x) > 0.8) {
-            intake.spinVertical();
-        }
+        // toggle spin: rotate the left stick anywhere violently
+        if (Math.abs(gamepad1.left_stick_y) > 0.8 || Math.abs(gamepad1.left_stick_x) > 0.8)
+            intake.toggleSpin();
 
         double speed = gamepad2.left_trigger > 0.5 ? 0.5 : 1;
 

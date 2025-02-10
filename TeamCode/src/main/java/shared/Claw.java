@@ -21,6 +21,7 @@ public class Claw {
     private final Servo angleMotorTwo;
     private final Servo intakeMotor;
     private final Servo spinMotor;
+    private boolean horizontal = false;
 
 //    public GrabState grabState;
 //    public RotateState rotateState;
@@ -38,6 +39,13 @@ public class Claw {
         spinVertical();
     }
 
+    public void toggleSpin() {
+        if (horizontal) {
+            spinVertical();
+        } else {
+            spinHorizontal();
+        }
+    }
 
     public void close() {
         intakeMotor.setPosition(1);
@@ -49,10 +57,12 @@ public class Claw {
     public void spinHorizontal() {
         // move to 90 degrees = 0.5
         spinMotor.setPosition(0.5);
+        horizontal = true;
     }
 
     public void spinVertical() {
         spinMotor.setPosition(0);
+        horizontal = false;
     }
 
     public void score() {

@@ -13,6 +13,7 @@ public class Extend {
     public static int target = 0;
     private final DcMotorEx motorOne;
     private final DcMotorEx motorTwo;
+    private boolean manual = false;
 
     public Extend(DcMotorEx motorOne, DcMotorEx motorTwo) {
         controller = new PIDController(p, i, d);
@@ -30,6 +31,7 @@ public class Extend {
     }
 
     public void setTarget(int t) {
+        manual = false;
         if (t >= EXTEND_STOP_MAX) {
             target = EXTEND_STOP_MAX;
         } else target = Math.max(t, EXTEND_STOP_MIN);
@@ -38,25 +40,22 @@ public class Extend {
     public int getTarget() { return target; }
 
     public void loop() {
-        double armPos = motorTwo.getCurrentPosition();
-        double power = controller.calculate(armPos, target);
-        motorTwo.setPower(-power);
-        motorOne.setPower(-power);
-    }
-
-    // hopefully these will be useful in auto and teleop trimming
-
-    public void loopForward() {
-        if (motorTwo.getCurrentPosition() < 700) {
-            motorOne.setPower(-0.2);
-            motorTwo.setPower(-0.2);
+        if (!manual) {
+            double armPos = motorTwo.getCurrentPosition();
+            double power = controller.calculate(armPos, target);
+            motorTwo.setPower(-power);
+            motorOne.setPower(-power);
         }
     }
 
-    public void loopBackward() {
-        if (motorTwo.getCurrentPosition() > 10) {
-            motorOne.setPower(0.2);
-            motorTwo.setPower(0.2);
-        }
+    // -1 for back, 1 for forward
+    public void manual(int d) {
+        manual = true;
+        motorTwo.setPower(-0.3 * d);
+        motorTwo.setPower(-0.3 * d);
+    }
+
+    public int getCurrentPosition() {
+        return motorTwo.getCurrentPosition();
     }
 }
