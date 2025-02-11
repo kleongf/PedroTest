@@ -18,6 +18,7 @@ public class Lift {
     private final DcMotorEx motorTwo;
     private final AnalogInput encoder;
     private final DcMotorEx extendMotor;
+    private final Multiplier multiplier;
 
     public Lift(DcMotorEx motorOne, DcMotorEx motorTwo, AnalogInput encoder, DcMotorEx extendMotor) {
         controller = new PIDController(p, i, d);
@@ -26,6 +27,7 @@ public class Lift {
         this.motorTwo = motorTwo;
         this.encoder = encoder;
         this.extendMotor = extendMotor;
+        this.multiplier = new Multiplier();
         // maybe this is causing the problem? idk
         extendMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         extendMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -43,11 +45,11 @@ public class Lift {
 
     public void loop() {
         // was 1 and 1.5
-        double multiplier = 0.8 + (extendMotor.getCurrentPosition() / 700.0) * 1.7;
-        // double multiplier = 0.3 (extendMotor.getCurrentPosition() / 700.0) * 2.5;
+        double coefficient = multiplier.calculateMultiplier(extendMotor.getCurrentPosition());
+        // double multiplier = 1 + (extendMotor.getCurrentPosition() / 700.0) * 1.5;
         double armPos = ((encoder.getVoltage() / 3.235 * 360) + offset + inherentOffset) % 360;
         double pid = controller.calculate(armPos, target);
-        double ff = Math.cos(Math.toRadians((encoder.getVoltage() / 3.235 * 360))) * f * multiplier;
+        double ff = Math.cos(Math.toRadians((encoder.getVoltage() / 3.235 * 360))) * f * coefficient;
         double power = pid + ff;
         motorOne.setPower(-power);
         motorTwo.setPower(-power);

@@ -93,6 +93,7 @@ public class RedSampleClawCV extends OpMode {
         }
     }
 
+    // probably could make this faster by setting the lift angle lower so that it doesnt have to be reset
     public void grabBlock() {
         if (actionTimer.getElapsedTimeSeconds() < 0.2) {
             extend.setTarget(600);
