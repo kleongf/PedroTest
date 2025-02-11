@@ -18,13 +18,14 @@ import com.qualcomm.robotcore.hardware.Servo;
 
 import pedroPathing.constants.FConstants;
 import pedroPathing.constants.LConstants;
+import shared.Claw;
 import shared.Extend;
 import shared.Intake;
 import shared.Lift;
 import static shared.Constants.*;
 
 
-@Autonomous(name = "Autonomous Red Spec Testing")
+@Autonomous(name = "Autonomous Red Spec claw")
 public class RedAutoSubTest extends OpMode {
     private Follower follower;
     private Timer pathTimer, actionTimer, opmodeTimer;
@@ -45,22 +46,21 @@ public class RedAutoSubTest extends OpMode {
 
     // TODO: MAKE THESE YOURSELF
     /** Pick up blocks */
-    private final Pose pickup1Pose = new Pose(0, 0, Math.toRadians(0));
+    private final Pose pickup1Pose = new Pose(112, 108, Math.toRadians(130));
 
-    private final Pose pickup2Pose = new Pose(0, 0, Math.toRadians(0));
+    private final Pose pickup2Pose = new Pose(112, 118, Math.toRadians(130));
 
-    private final Pose pickup3Pose = new Pose(0, 0, Math.toRadians(0));
+    private final Pose pickup3Pose = new Pose(112, 128, Math.toRadians(130));
 
     // once blocks are picked up they need to be placed in the taped off area
 
-    private final Pose placePickup1Pose = new Pose(0, 0, Math.toRadians(0));
+    private final Pose placePickup1Pose = new Pose(112, 113, Math.toRadians(50));
 
-    private final Pose placePickup2Pose = new Pose(0, 0, Math.toRadians(0));
+    private final Pose placePickup2Pose = new Pose(112, 123, Math.toRadians(50));
 
-    private final Pose placePickup3Pose = new Pose(0, 0, Math.toRadians(0));
+    private final Pose placePickup3Pose = new Pose(120, 120, Math.toRadians(50));
 
-    private final Pose pickUpZonePose = new Pose(0, 0, Math.toRadians(0));
-
+    private final Pose pickUpZonePose = new Pose(135, 114, Math.toRadians(0));
 
 
     /* These are our Paths and PathChains that we will define in buildPaths() */
@@ -78,36 +78,36 @@ public class RedAutoSubTest extends OpMode {
 
     Lift lift;
     Extend extend;
-    Intake intake;
+    Claw intake;
 
-    // TODO: EDIT SCORE FUNCTION
-    public void score() {
-        if (actionTimer.getElapsedTimeSeconds() < 0.3) {
-            intake.IntakeUp();
+    public void prepareScore() {
+        if (actionTimer.getElapsedTimeSeconds() < 0.2) {
+            intake.score();
+        } else if (actionTimer.getElapsedTimeSeconds() < 0.4) {
             lift.setTarget(105);
-        } else if (actionTimer.getElapsedTimeSeconds() < 0.6) {
-            extend.setTarget(200);
-        } else if (actionTimer.getElapsedTimeSeconds() < 1) {
-            intake.IntakeReverse();
-        } else if (actionTimer.getElapsedTimeSeconds() < 1.2) {
-            extend.setTarget(EXTEND_DEFAULT_AUTO);
-        } else if (actionTimer.getElapsedTimeSeconds() < 1.5) {
-            lift.setTarget(ANGLE_DOWN_AUTO);
-            intake.IntakeDown();
         }
     }
+
+    public void score() {
+        if (actionTimer.getElapsedTimeSeconds() < 0.2) {
+            extend.setTarget(200);
+        } else if (actionTimer.getElapsedTimeSeconds() < 0.4) {
+            intake.open();
+        }
+    }
+
+
     /** Build the paths for the auto (adds, for example, constant/linear headings while doing paths)
      * It is necessary to do this so that all the paths are built before the auto starts. **/
     public void buildPaths() {
         scorePreload = new Path(new BezierLine(new Point(startPose), new Point(scorePose)));
         scorePreload.setLinearHeadingInterpolation(startPose.getHeading(), scorePose.getHeading());
 
-        // TODO: FIND THE MIDDLE POINTS
         grabPickup1 = follower.pathBuilder()
                 .addPath(
                         new BezierCurve(
                                 new Point(scorePose),
-                                new Point(0, 0, Point.CARTESIAN),
+                                new Point(132, 96, Point.CARTESIAN),
                                 new Point(pickup1Pose)
                         )
                 )
@@ -116,9 +116,8 @@ public class RedAutoSubTest extends OpMode {
 
         placePickup1 = follower.pathBuilder()
                 .addPath(
-                        new BezierCurve(
+                        new BezierLine(
                                 new Point(pickup1Pose),
-                                new Point(0, 0, Point.CARTESIAN),
                                 new Point(placePickup1Pose)
                         )
                 )
@@ -127,9 +126,8 @@ public class RedAutoSubTest extends OpMode {
 
         grabPickup2 = follower.pathBuilder()
                 .addPath(
-                        new BezierCurve(
+                        new BezierLine(
                                 new Point(placePickup1Pose),
-                                new Point(0, 0, Point.CARTESIAN),
                                 new Point(pickup2Pose)
                         )
                 )
@@ -138,9 +136,8 @@ public class RedAutoSubTest extends OpMode {
 
         placePickup2 = follower.pathBuilder()
                 .addPath(
-                        new BezierCurve(
+                        new BezierLine(
                                 new Point(pickup2Pose),
-                                new Point(0, 0, Point.CARTESIAN),
                                 new Point(placePickup2Pose)
                         )
                 )
@@ -149,9 +146,8 @@ public class RedAutoSubTest extends OpMode {
 
         grabPickup3 = follower.pathBuilder()
                 .addPath(
-                        new BezierCurve(
+                        new BezierLine(
                                 new Point(placePickup2Pose),
-                                new Point(0, 0, Point.CARTESIAN),
                                 new Point(pickup3Pose)
                         )
                 )
@@ -162,7 +158,7 @@ public class RedAutoSubTest extends OpMode {
                 .addPath(
                         new BezierCurve(
                                 new Point(pickup3Pose),
-                                new Point(0, 0, Point.CARTESIAN),
+                                new Point(115, 120, Point.CARTESIAN),
                                 new Point(placePickup3Pose)
                         )
                 )
@@ -242,29 +238,38 @@ public class RedAutoSubTest extends OpMode {
 
     }
     public void autonomousPathUpdate() {
-        // TODO: PLAN MOVEMENTS (arm extension, retraction, etc.)
         switch (pathState) {
             case 0:
                 follower.followPath(scorePreload);
+                actionTimer.resetTimer();
                 setPathState(1);
                 break;
             case 1:
                 if (follower.isBusy()) {
-                    actionTimer.resetTimer();
+                    prepareScore();
                 }
 
                 if(!follower.isBusy()) {
                     /* Score Preload */
                     score();
-                    if (actionTimer.getElapsedTimeSeconds() > 2.4) {
-                        intake.IntakeForward();
+                    if (actionTimer.getElapsedTimeSeconds() > 0.6) {
+                        // lift down and extend
                         follower.followPath(grabPickup1,false);
+                        actionTimer.resetTimer();
                         setPathState(2);
                     }
                 }
                 break;
             case 2:
+                if (follower.isBusy()) {
+                    if (actionTimer.getElapsedTimeSeconds() < 0.3) {
+                        lift.setTarget(10);
+                    } else if (actionTimer.getElapsedTimeSeconds() < 0.6) {
+                        extend.setTarget(250);
+                    }
+                }
                 if(!follower.isBusy()) {
+                    intake.close();
                     follower.followPath(placePickup1,false);
                     setPathState(3);
                 }
@@ -274,15 +279,14 @@ public class RedAutoSubTest extends OpMode {
                     actionTimer.resetTimer();
                 }
                 if(!follower.isBusy()) {
-                    if (actionTimer.getElapsedTimeSeconds() > 2) {
-                        // extend out, outtake, retract, intake
-                        follower.followPath(grabPickup2, false);
-                        setPathState(4);
-                    }
+                    intake.open();
+                    follower.followPath(grabPickup2, false);
+                    setPathState(4);
                 }
                 break;
             case 4:
                 if(!follower.isBusy()) {
+                    intake.close();
                     follower.followPath(placePickup2,false);
                     setPathState(5);
                 }
@@ -292,15 +296,15 @@ public class RedAutoSubTest extends OpMode {
                     actionTimer.resetTimer();
                 }
                 if(!follower.isBusy()) {
-                    if (actionTimer.getElapsedTimeSeconds() > 2) {
-                        // extend out, outtake, retract, intake
+                        intake.open();
                         follower.followPath(grabPickup3, false);
                         setPathState(6);
-                    }
+
                 }
                 break;
             case 6:
                 if(!follower.isBusy()) {
+                    intake.close();
                     follower.followPath(placePickup3,false);
                     setPathState(7);
                 }
@@ -310,15 +314,20 @@ public class RedAutoSubTest extends OpMode {
                     actionTimer.resetTimer();
                 }
                 if(!follower.isBusy()) {
-                    if (actionTimer.getElapsedTimeSeconds() > 2) {
-                        // extend out, outtake, retract, intake
-                        follower.followPath(goToPickupZone, false);
-                        setPathState(8);
-                    }
+                    intake.open();
+                    follower.followPath(goToPickupZone, false);
+                    setPathState(8);
+
                 }
                 break;
             case 8:
-                if(!follower.isBusy()) {
+                if (follower.isBusy()) {
+                    extend.setTarget(50);
+                    lift.setTarget(40);
+                    intake.dropOff();
+                }
+                if (!follower.isBusy()) {
+                    intake.close();
                     follower.followPath(scorePickup1,true);
                     setPathState(9);
                 }
@@ -329,15 +338,20 @@ public class RedAutoSubTest extends OpMode {
                 }
                 if(!follower.isBusy()) {
                     score();
-                    if (actionTimer.getElapsedTimeSeconds() > 2.4) {
-                        intake.IntakeForward();
-                        follower.followPath(moveBack1, false);
+                    if (actionTimer.getElapsedTimeSeconds() > 0.6) {
+                        follower.followPath(moveBack1, true);
                         setPathState(10);
                     }
                 }
                 break;
             case 10:
+                if (follower.isBusy()) {
+                    extend.setTarget(50);
+                    lift.setTarget(40);
+                    intake.dropOff();
+                }
                 if(!follower.isBusy()) {
+                    intake.close();
                     follower.followPath(scorePickup2,true);
                     setPathState(11);
                 }
@@ -348,15 +362,20 @@ public class RedAutoSubTest extends OpMode {
                 }
                 if(!follower.isBusy()) {
                     score();
-                    if (actionTimer.getElapsedTimeSeconds() > 2.4) {
-                        intake.IntakeForward();
-                        follower.followPath(moveBack2, false);
+                    if (actionTimer.getElapsedTimeSeconds() > 0.6) {
+                        follower.followPath(moveBack2, true);
                         setPathState(12);
                     }
                 }
                 break;
             case 12:
+                if (follower.isBusy()) {
+                    extend.setTarget(50);
+                    lift.setTarget(40);
+                    intake.dropOff();
+                }
                 if(!follower.isBusy()) {
+                    intake.close();
                     follower.followPath(scorePickup3,true);
                     setPathState(13);
                 }
@@ -367,9 +386,8 @@ public class RedAutoSubTest extends OpMode {
                 }
                 if(!follower.isBusy()) {
                     score();
-                    if (actionTimer.getElapsedTimeSeconds() > 2.4) {
-                        intake.IntakeForward();
-                        follower.followPath(moveBack3, false);
+                    if (actionTimer.getElapsedTimeSeconds() > 0.6) {
+                        follower.followPath(moveBack3, true);
                         setPathState(14);
                     }
                 }
@@ -398,10 +416,8 @@ public class RedAutoSubTest extends OpMode {
         follower.update();
         autonomousPathUpdate();
 
-        intake.loop();
         lift.loop();
         extend.loop();
-        // detector.loop();
 
         // Feedback to Driver Hub
         telemetry.addData("path state", pathState);
@@ -431,7 +447,7 @@ public class RedAutoSubTest extends OpMode {
 
         lift = new Lift(liftMotorOne, liftMotorTwo, analogEncoder, extendMotorTwo);
         extend = new Extend(extendMotorOne, extendMotorTwo);
-        intake = new Intake(rotateMotorOne, rotateMotorTwo, intakeMotor);
+        intake = new Claw(hardwareMap);
 
         Constants.setConstants(FConstants.class, LConstants.class);
         follower = new Follower(hardwareMap);
