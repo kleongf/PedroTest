@@ -76,6 +76,27 @@ public class RedSampleClawCV extends OpMode {
     OpenCvCamera phoneCam;
     YellowPipeline yellowPipeline;
 
+    // 0.4s
+    public void prepareScore() {
+        if (actionTimer.getElapsedTimeSeconds() < 0.2) {
+            lift.setTarget(ANGLE_UP_AUTO);
+        } else if (actionTimer.getElapsedTimeSeconds() < 0.4) {
+            extend.setTarget(EXTEND_HIGH_AUTO);
+            intake.score();
+        }
+    }
+
+    // 0.6s
+    public void downAndExtend(int extendAmount) {
+        if (actionTimer.getElapsedTimeSeconds() < 0.2) {
+            extend.setTarget(0);
+        } else if (actionTimer.getElapsedTimeSeconds() < 0.4) {
+            lift.setTarget(9.2);
+        } else if (actionTimer.getElapsedTimeSeconds() < 0.6) {
+            extend.setTarget(extendAmount);
+        }
+    }
+
     public void score() {
         if (actionTimer.getElapsedTimeSeconds() < 0.3) {
             lift.setTarget(ANGLE_UP_AUTO);
@@ -141,110 +162,91 @@ public class RedSampleClawCV extends OpMode {
         switch (pathState) {
             case 0:
                 follower.followPath(scorePreload);
+                actionTimer.resetTimer();
                 setPathState(1);
                 break;
             case 1:
                 if (follower.isBusy()) {
-                    actionTimer.resetTimer();
+                    prepareScore();
                 }
                 if(!follower.isBusy()) {
-                    /* Score Preload */
-                    score();
-                    /* Since this is a pathChain, we can have Pedro hold the end point while we are grabbing the sample */
-                    if (actionTimer.getElapsedTimeSeconds() > 2.4) {
-                        follower.turnToDegrees(165);
-                        actionTimer.resetTimer();
-                        setPathState(2);
-                    }
+                    intake.open();
+                    follower.turnDegrees(50, true);
+                    actionTimer.resetTimer();
+                    setPathState(2);
                 }
                 break;
             case 2:
-                if (follower.isBusy()) {actionTimer.resetTimer();}
-                if (!follower.isBusy()) {
-                    grabBlock();
-                    if (actionTimer.getElapsedTimeSeconds() < 1.5) {
-                        follower.turnToDegrees(135);
-                        actionTimer.resetTimer();
-                        setPathState(3);
-                    }
+                // check if heading is past a certain point, then we can close intake.
+                downAndExtend(600); // 2nd farthest
+                // arbitrary amount but it should work?
+                // TODO: maybe add another condition: actionTimer > 0.5s? just to be safe
+                if (Math.toDegrees(follower.getPose().getHeading()) > 170) {
+                    intake.close();
+                    actionTimer.resetTimer();
+                    follower.turnDegrees(50, false);
+                    setPathState(3);
                 }
                 break;
             case 3:
-                /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the scorePose's position */
-                if (follower.isBusy()) {
+                prepareScore();
+                // if its past a certain point (like last time) then we score: 140 degrees this time
+                if (Math.toDegrees(follower.getPose().getHeading()) < 140) {
+                    intake.open();
+                    follower.turnDegrees(80, true);
                     actionTimer.resetTimer();
-                }
-                if(!follower.isBusy()) {
-                    /* Score Sample */
-                    score();
-                    /* Since this is a pathChain, we can have Pedro hold the end point while we are grabbing the sample */
-                    if (actionTimer.getElapsedTimeSeconds() > 2.4) {
-                        follower.turnToDegrees(192);
-                        actionTimer.resetTimer();
-                        setPathState(4);
-                    }
+                    setPathState(4);
                 }
                 break;
             case 4:
-                if (follower.isBusy()) {actionTimer.resetTimer();}
-                if (!follower.isBusy()) {
-                    grabBlock();
-                    if (actionTimer.getElapsedTimeSeconds() < 1.5) {
-                        follower.turnToDegrees(135);
-                        actionTimer.resetTimer();
-                        setPathState(5);
-                    }
+                downAndExtend(550);
+                // can always change these heading values later
+                if (Math.toDegrees(follower.getPose().getHeading()) > 200) {
+                    intake.close();
+                    actionTimer.resetTimer();
+                    follower.turnDegrees(80, false);
+                    setPathState(5);
                 }
                 break;
             case 5:
-                /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the scorePose's position */
-                if (follower.isBusy()) {
+                prepareScore();
+                if (Math.toDegrees(follower.getPose().getHeading()) < 140) {
+                    intake.open();
+                    follower.turnDegrees(98, true);
                     actionTimer.resetTimer();
-                }
-                if(!follower.isBusy()) {
-                    /* Score Sample */
-                    score();
-                    /* Since this is a pathChain, we can have Pedro hold the end point while we are grabbing the sample */
-                    if (actionTimer.getElapsedTimeSeconds() > 2.4) {
-                        follower.turnToDegrees(216);
-                        actionTimer.resetTimer();
-                        setPathState(6);
-                    }
+                    setPathState(6);
                 }
                 break;
             case 6:
-                if (follower.isBusy()) {actionTimer.resetTimer();}
-                if (!follower.isBusy()) {
-                    grabBlock();
-                    if (actionTimer.getElapsedTimeSeconds() < 1.5) {
-                        follower.turnToDegrees(135);
-                        actionTimer.resetTimer();
-                        setPathState(7);
-                    }
+                downAndExtend(700);
+                // can always change these heading values later
+                if (Math.toDegrees(follower.getPose().getHeading()) > 210) {
+                    intake.close();
+                    actionTimer.resetTimer();
+                    follower.turnDegrees(98, false);
+                    setPathState(7);
                 }
                 break;
             case 7:
-                if (follower.isBusy()) {
+                prepareScore();
+                if (Math.toDegrees(follower.getPose().getHeading()) < 140) {
+                    intake.open();
+                    follower.followPath(goToSubmersible, true);
                     actionTimer.resetTimer();
-                }
-                if(!follower.isBusy()) {
-                    /* Score Sample */
-                    score();
-                    /* Since this is a pathChain, we can have Pedro hold the end point while we are grabbing the sample */
-                    if (actionTimer.getElapsedTimeSeconds() > 2.4) {
-                        setPathState(8);
-                    }
+                    setPathState(8);
                 }
                 break;
             case 8:
                 lift.setTarget(ANGLE_ZERO);
-                follower.followPath(goToSubmersible, false);
+                extend.setTarget(0);
+                actionTimer.resetTimer();
                 setPathState(9);
                 break;
             case 9:
+                if (actionTimer.getElapsedTimeSeconds() > 0.5) {
+                    extend.setTarget(400);
+                }
                 if (!follower.isBusy()) {
-                    extend.setTarget(500);
-                    // slowing it down but maybe it can go faster
                     follower.setMaxPower(0.36);
                     follower.followPath(trimY, true);
                     setPathState(10);
@@ -286,11 +288,12 @@ public class RedSampleClawCV extends OpMode {
             case 11:
                 if (actionTimer.getElapsedTimeSeconds() < 0.3) {
                     if (yellowPipeline.getOrientation() == 1) {intake.spinHorizontal();}
-                    lift.setTarget(9);
+                    lift.setTarget(8);
                 } else if (actionTimer.getElapsedTimeSeconds() < 0.6) {
                     intake.close();
                 } else if (actionTimer.getElapsedTimeSeconds() < 1) {
                     lift.setTarget(ANGLE_ZERO);
+                    intake.submersibleUp();
                 } else if (actionTimer.getElapsedTimeSeconds() < 1.3) {
                     extend.setTarget(0);
                     follower.setMaxPower(1);
@@ -307,7 +310,7 @@ public class RedSampleClawCV extends OpMode {
                     /* Score Sample */
                     score();
                     /* Since this is a pathChain, we can have Pedro hold the end point while we are grabbing the sample */
-                    if (actionTimer.getElapsedTimeSeconds() > 2.4) {
+                    if (actionTimer.getElapsedTimeSeconds() > 1.8) {
                         setPathState(-1);
                     }
                 }
@@ -359,7 +362,7 @@ public class RedSampleClawCV extends OpMode {
 
         lift = new Lift(liftMotorOne, liftMotorTwo, analogEncoder, extendMotorTwo);
         extend = new Extend(extendMotorOne, extendMotorTwo);
-        intake = new Claw(hardwareMap);
+        // intake = new Claw(hardwareMap);
 
         Constants.setConstants(FConstants.class, LConstants.class);
         follower = new Follower(hardwareMap);

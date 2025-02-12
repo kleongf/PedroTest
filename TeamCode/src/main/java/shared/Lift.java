@@ -8,8 +8,8 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 
 public class Lift {
     private final PIDController controller;
-    public static double p = 0.08, i = 0.0, d = 0.002;
-    public static double f = 0.01;
+    public static double p = 0.08, i = 0.02, d = 0.002;
+    public static double f = 0.0022;
     public static double target = ANGLE_ZERO;
     // keep testing offset
     private static double offset = ANGLE_ZERO;
