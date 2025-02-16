@@ -24,7 +24,7 @@ import shared.Lift;
 import static shared.Constants.*;
 
 // other idea: we can move arm and pivot while driving?
-@Autonomous(name = "Autonomous Red Testing")
+@Autonomous(name = "Autonomous Red Testing BAD")
 public class RedAutoTest extends OpMode {
     private Follower follower;
     private Timer pathTimer, actionTimer, opmodeTimer;

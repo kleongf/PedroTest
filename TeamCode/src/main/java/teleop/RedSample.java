@@ -104,7 +104,7 @@ public class RedSample extends OpMode {
             // left bumper: extend max
             case LIFT_START:
                 if (gamepad1.right_trigger > 0.5 && previousGamepad1.right_trigger < 0.5) {
-                    intake.score();
+                    // intake.score();
                     lift.setTarget(ANGLE_UP);
                     actionTimer.reset();
                     liftState = LiftState.LIFT_UP_HIGH;
@@ -126,7 +126,7 @@ public class RedSample extends OpMode {
                 break;
 
             case LIFT_UP_HIGH:
-                if (actionTimer.seconds() >= 0.3) {
+                if (actionTimer.seconds() >= 0.2) {
                     extend.setTarget(EXTEND_HIGH);
                     actionTimer.reset();
                     liftState = LiftState.WAIT;
@@ -162,7 +162,7 @@ public class RedSample extends OpMode {
 
         switch (intakeState) {
             // left stick: open, down, close on release
-            // right stick: up, open on release
+            // right stick: open
             case INTAKE_START:
                 if (gamepad1.left_stick_button && !previousGamepad1.left_stick_button) {
                     intake.open();
@@ -170,23 +170,17 @@ public class RedSample extends OpMode {
                     intakeTimer.reset();
                     intakeState = IntakeState.INTAKE_LIFT_DOWN;
                 } else if (gamepad1.right_stick_button && !previousGamepad1.right_stick_button) {
-                    intake.score();
+                    intake.open();
                     intakeTimer.reset();
-                    intakeState = IntakeState.INTAKE_OPEN;
                 }
                 break;
 
             case INTAKE_LIFT_DOWN:
-                if (intakeTimer.seconds() >= 0.3) {
-                    // TODO: we need one function for all of these once we tune pivot
-                    // it should consistently move the arm down the correct amount
-                    // 10-arctan(1/(extend.getTarget()/ticksperinch))
-                    // watch out for div 0 errors if target is 0
-                    if (extend.getTarget() <= EXTEND_MID && extend.getTarget() > 0) {
-                        lift.setTarget(ANGLE_MID);
-                    } else if (extend.getTarget() <= EXTEND_MAX && extend.getTarget() > EXTEND_MID) {
-                        lift.setTarget(ANGLE_MAX);
+                if (intakeTimer.seconds() >= 0.2) {
+                    if (extend.getCurrentPosition() > 0) {
+                        lift.setTarget(10-Math.toDegrees(Math.atan(1/(12+(extend.getCurrentPosition()/29.0)))));
                     } else {
+                        // extension is at 0, needs to be lifted down to the minimum angle
                         lift.setTarget(ANGLE_STOP_MIN);
                     }
                     if (!gamepad1.left_stick_button) {
@@ -194,23 +188,38 @@ public class RedSample extends OpMode {
                         intakeTimer.reset();
                         intakeState = IntakeState.INTAKE_UP;
                     }
+//                    // it should consistently move the arm down the correct amount
+//                    // 10-arctan(1/(extend.getTarget()/ticksperinch))
+//                    // watch out for div 0 errors if target is 0
+//                    if (extend.getTarget() <= EXTEND_MID && extend.getTarget() > 0) {
+//                        lift.setTarget(ANGLE_MID);
+//                    } else if (extend.getTarget() <= EXTEND_MAX && extend.getTarget() > EXTEND_MID) {
+//                        lift.setTarget(ANGLE_MAX);
+//                    } else {
+//                        lift.setTarget(ANGLE_STOP_MIN);
+//                    }
+//                    if (!gamepad1.left_stick_button) {
+//                        intake.close();
+//                        intakeTimer.reset();
+//                        intakeState = IntakeState.INTAKE_UP;
+//                    }
                 }
                 break;
 
             case INTAKE_UP:
-                if (intakeTimer.seconds() > 0.1) {
-                    intake.submersibleUp();
+                if (intakeTimer.seconds() > 0.2) {
+                    intake.score();
                     intakeTimer.reset();
                     intakeState = IntakeState.INTAKE_START;
                 }
                 break;
-            case INTAKE_OPEN:
-                if (!gamepad1.right_stick_button) {
-                    intake.open();
-                    intakeTimer.reset();
-                    intakeState = IntakeState.INTAKE_START;
-                }
-                break;
+//            case INTAKE_OPEN:
+//                if (!gamepad1.right_stick_button) {
+//                    intake.open();
+//                    intakeTimer.reset();
+//                    intakeState = IntakeState.INTAKE_START;
+//                }
+//                break;
 
             default:
                 intakeState = IntakeState.INTAKE_START;

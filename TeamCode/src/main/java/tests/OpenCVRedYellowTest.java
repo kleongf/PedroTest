@@ -16,23 +16,24 @@ import org.openftc.easyopencv.OpenCvInternalCamera;
 import org.openftc.easyopencv.OpenCvPipeline;
 
 import vision.YellowPipeline;
+import vision.YellowRedPipeline;
 
 /*
  * This version of the internal camera example uses EasyOpenCV's interface to the
  * original Android camera API
  */
-@TeleOp
-public class OpenCVTest extends LinearOpMode
+@TeleOp(name="Open CV red yellow test")
+public class OpenCVRedYellowTest extends LinearOpMode
 {
     OpenCvCamera phoneCam;
-    YellowPipeline yellowPipeline;
+    YellowRedPipeline yellowPipeline;
 
     @Override
     public void runOpMode()
     {
         phoneCam = OpenCvCameraFactory.getInstance().createWebcam(hardwareMap.get(WebcamName.class, "Webcam 1"));
         FtcDashboard.getInstance().startCameraStream(phoneCam, 0);
-        yellowPipeline = new YellowPipeline();
+        yellowPipeline = new YellowRedPipeline();
         phoneCam.openCameraDeviceAsync(new OpenCvCamera.AsyncCameraOpenListener()
 
         {
@@ -70,12 +71,10 @@ public class OpenCVTest extends LinearOpMode
         {
             telemetry.addData("Frame Count", phoneCam.getFrameCount());
             telemetry.addData("FPS", String.format("%.2f", phoneCam.getFps()));
-            telemetry.addData("Total frame time ms", phoneCam.getTotalFrameTimeMs());
-            telemetry.addData("Pipeline time ms", phoneCam.getPipelineTimeMs());
-            telemetry.addData("Overhead time ms", phoneCam.getOverheadTimeMs());
-            telemetry.addData("Theoretical max FPS", phoneCam.getCurrentPipelineMaxFps());
             telemetry.addData("Object In Center", yellowPipeline.isBlockDetected());
+            telemetry.addData("Orientation", yellowPipeline.getOrientation());
             telemetry.update();
         }
     }
 }
+

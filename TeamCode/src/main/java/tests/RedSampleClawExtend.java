@@ -33,8 +33,8 @@ import org.openftc.easyopencv.OpenCvCamera;
 import org.openftc.easyopencv.OpenCvCameraFactory;
 import org.openftc.easyopencv.OpenCvCameraRotation;
 
-@Autonomous(name = "Autonomous Red Claw CV Testing")
-public class RedSampleClawCV extends OpMode {
+@Autonomous(name = "Autonomous Red Claw CV Extend Testing")
+public class RedSampleClawExtend extends OpMode {
     private Follower follower;
     private Timer pathTimer, actionTimer, opmodeTimer;
     private int pathState;
@@ -52,9 +52,7 @@ public class RedSampleClawCV extends OpMode {
 
     private final Pose pickup3Pose = new Pose(123.5, 14, Math.toRadians(216));
 
-    private final Pose submersibleStartPose = new Pose(72, 30, Math.toRadians(90));
-
-    private final Pose submersibleEndPose = new Pose(72, 52, Math.toRadians(90));
+    private final Pose submersibleStartPose = new Pose(80, 50, Math.toRadians(90));
 
     private Path scorePreload, park;
     private PathChain grabPickup1, grabPickup2, grabPickup3, scorePickup1, scorePickup2, scorePickup3, trimY;
@@ -116,38 +114,6 @@ public class RedSampleClawCV extends OpMode {
         }
     }
 
-    public void score() {
-        if (actionTimer.getElapsedTimeSeconds() < 0.3) {
-            lift.setTarget(ANGLE_UP_AUTO);
-        } else if (actionTimer.getElapsedTimeSeconds() < 0.6) {
-            extend.setTarget(EXTEND_HIGH_AUTO);
-        } else if (actionTimer.getElapsedTimeSeconds() < 0.9) {
-            intake.score();
-        } else if (actionTimer.getElapsedTimeSeconds() < 1.2) {
-            intake.open();
-        } else if (actionTimer.getElapsedTimeSeconds() < 1.5) {
-            extend.setTarget(EXTEND_DEFAULT_AUTO);
-        } else if (actionTimer.getElapsedTimeSeconds() < 1.8) {
-            lift.setTarget(ANGLE_ZERO);
-            intake.submersibleDown();
-        }
-    }
-
-    // probably could make this faster by setting the lift angle lower so that it doesnt have to be reset
-    public void grabBlock() {
-        if (actionTimer.getElapsedTimeSeconds() < 0.2) {
-            extend.setTarget(600);
-        } else if (actionTimer.getElapsedTimeSeconds() < 0.5) {
-            lift.setTarget(9.5);
-        } else if (actionTimer.getElapsedTimeSeconds() < 0.8) {
-            intake.close();
-        } else if (actionTimer.getElapsedTimeSeconds() < 1) {
-            lift.setTarget(ANGLE_ZERO);
-        } else if (actionTimer.getElapsedTimeSeconds() < 1.3) {
-            extend.setTarget(0);
-        }
-    }
-
     /** Build the paths for the auto (adds, for example, constant/linear headings while doing paths)
      * It is necessary to do this so that all the paths are built before the auto starts. **/
     public void buildPaths() {
@@ -166,15 +132,17 @@ public class RedSampleClawCV extends OpMode {
                 .setLinearHeadingInterpolation(scorePose.getHeading(), submersibleStartPose.getHeading())
                 .build();
 
-        trimY = follower.pathBuilder()
+        scorePickup = follower.pathBuilder()
                 .addPath(
-                        new BezierLine(
+                        new BezierCurve(
                                 new Point(submersibleStartPose),
-                                new Point(submersibleEndPose)
+                                new Point(75, 23, Point.CARTESIAN),
+                                new Point(scorePose)
                         )
                 )
-                .setLinearHeadingInterpolation(submersibleStartPose.getHeading(), submersibleEndPose.getHeading())
+                .setLinearHeadingInterpolation(submersibleStartPose.getHeading(), scorePose.getHeading())
                 .build();
+
 
     }
     public void autonomousPathUpdate() {
@@ -256,82 +224,55 @@ public class RedSampleClawCV extends OpMode {
                 }
                 break;
             case 8:
-                lift.setTarget(ANGLE_ZERO);
-                extend.setTarget(0);
-                actionTimer.resetTimer();
-                setPathState(9);
+                if (!follower.isBusy()) {
+                    extend.manual(1);
+                    actionTimer.resetTimer();
+                    setPathState(9);
+                } else {
+                    lift.setTarget(ANGLE_ZERO);
+                    extend.setTarget(0);
+                }
                 break;
             case 9:
-                if (actionTimer.getElapsedTimeSeconds() > 0.5) {
-                    extend.setTarget(400);
-                }
-                if (!follower.isBusy()) {
-                    follower.setMaxPower(0.36);
-                    follower.followPath(trimY, true);
+                if (yellowPipeline.isBlockDetected()) {
+                    actionTimer.resetTimer();
+                    extend.setTarget(extend.getCurrentPosition());
                     setPathState(10);
+                } else {
+                    if (extend.getCurrentPosition() > 680) {
+                        extend.setTarget(extend.getCurrentPosition());
+                        actionTimer.resetTimer();
+                        setPathState(10);
+                    }
+                    extend.manual(1);
                 }
                 break;
             case 10:
-                if (follower.isBusy()) {
-                    if (yellowPipeline.isBlockDetected()) {
-                        scorePickup = follower.pathBuilder()
-                                .addPath(
-                                        new BezierCurve(
-                                                new Point(follower.getPose()),
-                                                new Point(75, 23, Point.CARTESIAN),
-                                                new Point(scorePose)
-                                        )
-                                )
-                                .setLinearHeadingInterpolation(follower.getPose().getHeading(), scorePose.getHeading())
-                                .build();
-                        follower.breakFollowing();
-                        actionTimer.resetTimer();
-                        setPathState(11);
+                if (actionTimer.getElapsedTimeSeconds() < 0.1) {
+                    if (yellowPipeline.getOrientation() == 1) {
+                        intake.spinHorizontal();
                     }
-                } else {
-                    scorePickup = follower.pathBuilder()
-                            .addPath(
-                                    new BezierCurve(
-                                            new Point(follower.getPose()),
-                                            new Point(75, 23, Point.CARTESIAN),
-                                            new Point(scorePose)
-                                    )
-                            )
-                            .setLinearHeadingInterpolation(follower.getPose().getHeading(), scorePose.getHeading())
-                            .build();
-                    follower.breakFollowing();
+                } else if (actionTimer.getElapsedTimeSeconds() < 0.3) {
+                    lift.setTarget(10-Math.toDegrees(Math.atan(1/(extend.getCurrentPosition()/29.0))));
+                } else if (actionTimer.getElapsedTimeSeconds() < 0.5) {
+                    intake.close();
+                } else if (actionTimer.getElapsedTimeSeconds() < 0.8) {
+                    lift.setTarget(ANGLE_ZERO);
+                } else if (actionTimer.getElapsedTimeSeconds() < 1) {
+                    intake.submersibleUp();
+                } else if (actionTimer.getElapsedTimeSeconds() < 1.2) {
+                    extend.setTarget(0);
+                    follower.followPath(scorePickup);
                     actionTimer.resetTimer();
                     setPathState(11);
                 }
                 break;
             case 11:
-                if (actionTimer.getElapsedTimeSeconds() < 0.3) {
-                    if (yellowPipeline.getOrientation() == 1) {intake.spinHorizontal();}
-                    lift.setTarget(8);
-                } else if (actionTimer.getElapsedTimeSeconds() < 0.6) {
-                    intake.close();
-                } else if (actionTimer.getElapsedTimeSeconds() < 1) {
-                    lift.setTarget(ANGLE_ZERO);
-                    intake.submersibleUp();
-                } else if (actionTimer.getElapsedTimeSeconds() < 1.3) {
-                    extend.setTarget(0);
-                    follower.setMaxPower(1);
-                    follower.followPath(scorePickup);
+                prepareScore();
+                if (!follower.isBusy()) {
+                    intake.open();
                     actionTimer.resetTimer();
-                    setPathState(12);
-                }
-                break;
-            case 12:
-                if (follower.isBusy()) {
-                    actionTimer.resetTimer();
-                }
-                if(!follower.isBusy()) {
-                    /* Score Sample */
-                    score();
-                    /* Since this is a pathChain, we can have Pedro hold the end point while we are grabbing the sample */
-                    if (actionTimer.getElapsedTimeSeconds() > 1.8) {
-                        setPathState(-1);
-                    }
+                    setPathState(-1);
                 }
                 break;
         }
@@ -425,4 +366,5 @@ public class RedSampleClawCV extends OpMode {
     public void stop() {
     }
 }
+
 

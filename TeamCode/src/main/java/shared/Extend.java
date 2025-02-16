@@ -8,7 +8,9 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 
 public class Extend {
     private PIDController controller;
+    // 0.025, 0.02, 0.0005
     public static double p = 0.025, i = 0.02, d = 0.0005;
+//    public static double p = 0.03, i = 0.0, d = 0.0001;
     public static double f = 0;
     public static int target = 0;
     private final DcMotorEx motorOne;
@@ -51,8 +53,8 @@ public class Extend {
     // -1 for back, 1 for forward
     public void manual(int d) {
         manual = true;
-        motorTwo.setPower(-0.3 * d);
-        motorTwo.setPower(-0.3 * d);
+        motorTwo.setPower(-0.6 * d);
+        motorTwo.setPower(-0.6 * d);
     }
 
     public int getCurrentPosition() {
