@@ -120,6 +120,7 @@ public class RedSampleNoRotate extends OpMode {
         } else if (actionTimer.getElapsedTimeSeconds() < 0.4) {
             // lift up and flip up intake
             lift.setTarget(ANGLE_UP_AUTO);
+            // intake.spinVertical();
         } else if (actionTimer.getElapsedTimeSeconds() < 0.6) {
             // extend up
             extend.setTarget(EXTEND_HIGH_AUTO);
@@ -171,6 +172,7 @@ public class RedSampleNoRotate extends OpMode {
             // need the extra push
             lift.setTarget(ANGLE_ZERO+2);
         } else if (actionTimer.getElapsedTimeSeconds() < 1) {
+            // TODO: i dont think we need this, leave it out
             // intake.submersibleUp();
         }
     }

@@ -19,7 +19,8 @@ public class Claw {
 
     private final Servo angleMotorOne;
     private final Servo angleMotorTwo;
-    private final Servo intakeMotor;
+    private final Servo intakeMotorOne;
+    private final Servo intakeMotorTwo;
     private final Servo spinMotor;
     private boolean horizontal = false;
 
@@ -31,7 +32,8 @@ public class Claw {
     public Claw(HardwareMap hardwareMap) {
         this.angleMotorOne = hardwareMap.get(Servo.class, "angleMotorOne");
         this.angleMotorTwo = hardwareMap.get(Servo.class, "angleMotorTwo");
-        this.intakeMotor = hardwareMap.get(Servo.class, "intakeMotor");
+        this.intakeMotorOne = hardwareMap.get(Servo.class, "intakeMotorOne");
+        this.intakeMotorTwo = hardwareMap.get(Servo.class, "intakeMotorTwo");
         this.spinMotor = hardwareMap.get(Servo.class, "spinMotor");
 
         close();
@@ -48,10 +50,12 @@ public class Claw {
     }
 
     public void close() {
-        intakeMotor.setPosition(1);
+        intakeMotorOne.setPosition(1);
+        intakeMotorTwo.setPosition(1);
     }
     public void open() {
-        intakeMotor.setPosition(0);
+        intakeMotorOne.setPosition(0);
+        intakeMotorTwo.setPosition(0);
     }
 
     public void spinHorizontal() {
