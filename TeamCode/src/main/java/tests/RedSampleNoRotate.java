@@ -158,22 +158,18 @@ public class RedSampleNoRotate extends OpMode {
 
     // 1.0s
     public void grabFromSubmersible() {
-        if (actionTimer.getElapsedTimeSeconds() < 0.2) {
-            if (yellowPipeline.getOrientation() == 1) {
-                // intake.spinHorizontal();
-            } else {
-                // intake.spinVertical();
+        // make sure there is enough time to turn intake
+        if (actionTimer.getElapsedTimeSeconds() > 0.15) {
+            if (actionTimer.getElapsedTimeSeconds() < 0.3) {
+                lift.setTarget(10 - Math.toDegrees(Math.atan(1 / (12 + (extend.getCurrentPosition() / 29.0)))));
+            } else if (actionTimer.getElapsedTimeSeconds() < 0.5) {
+                // intake.close();
+            } else if (actionTimer.getElapsedTimeSeconds() < 0.8) {
+                // need the extra push
+                lift.setTarget(ANGLE_ZERO + 2);
+            } else if (actionTimer.getElapsedTimeSeconds() < 1) {
+                // intake.score();
             }
-        } else if (actionTimer.getElapsedTimeSeconds() < 0.3) {
-            lift.setTarget(10-Math.toDegrees(Math.atan(1/(12+(extend.getCurrentPosition()/29.0)))));
-        } else if (actionTimer.getElapsedTimeSeconds() < 0.5) {
-            // intake.close();
-        } else if (actionTimer.getElapsedTimeSeconds() < 0.8) {
-            // need the extra push
-            lift.setTarget(ANGLE_ZERO+2);
-        } else if (actionTimer.getElapsedTimeSeconds() < 1) {
-            // TODO: i dont think we need this, leave it out
-            // intake.submersibleUp();
         }
     }
 
@@ -451,6 +447,11 @@ public class RedSampleNoRotate extends OpMode {
                 break;
             case 9:
                 if (yellowPipeline.isBlockDetected()) {
+                    if (yellowPipeline.getOrientation() == 1) {
+                        // intake.spinHorizontal();
+                    } else {
+                        // intake.spinVertical();
+                    }
                     actionTimer.resetTimer();
                     extend.setTarget(extend.getCurrentPosition());
                     setPathState(10);
@@ -494,6 +495,11 @@ public class RedSampleNoRotate extends OpMode {
                 break;
             case 13:
                 if (yellowPipeline.isBlockDetected()) {
+                    if (yellowPipeline.getOrientation() == 1) {
+                        // intake.spinHorizontal();
+                    } else {
+                        // intake.spinVertical();
+                    }
                     actionTimer.resetTimer();
                     extend.setTarget(extend.getCurrentPosition());
                     setPathState(14);
@@ -537,6 +543,11 @@ public class RedSampleNoRotate extends OpMode {
                 break;
             case 17:
                 if (yellowPipeline.isBlockDetected()) {
+                    if (yellowPipeline.getOrientation() == 1) {
+                        // intake.spinHorizontal();
+                    } else {
+                        // intake.spinVertical();
+                    }
                     actionTimer.resetTimer();
                     extend.setTarget(extend.getCurrentPosition());
                     setPathState(18);
