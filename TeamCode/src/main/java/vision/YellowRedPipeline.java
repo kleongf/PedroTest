@@ -12,14 +12,14 @@ public class YellowRedPipeline extends OpenCvPipeline {
     private static final Scalar UPPER_RED1 = new Scalar(10, 255, 255);
     private static final Scalar LOWER_RED2 = new Scalar(170, 100, 100);
     private static final Scalar UPPER_RED2 = new Scalar(180, 255, 255);
-    private static final Scalar LOWER_YELLOW = new Scalar(20, 100, 100);
-    private static final Scalar UPPER_YELLOW = new Scalar(30, 255, 255);
+    private static final Scalar LOWER_YELLOW = new Scalar(10, 150, 100);
+    private static final Scalar UPPER_YELLOW = new Scalar(40, 255, 255);
 
     // Define Region of Interest (ROI) coordinates
-    private static final int ROI_X_START = 200;
-    private static final int ROI_X_END = 440;
-    private static final int ROI_Y_START = 80;
-    private static final int ROI_Y_END = 280;
+    private static final int ROI_X_START = 220;
+    private static final int ROI_X_END = 420;
+    private static final int ROI_Y_START = 0;
+    private static final int ROI_Y_END = 200;
 
     // Mats for processing images
     private Mat hsvMat = new Mat();
