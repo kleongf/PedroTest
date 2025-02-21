@@ -25,7 +25,7 @@ import shared.Lift;
 import static shared.Constants.*;
 
 
-@Autonomous(name = "Autonomous Red Spec claw")
+@Autonomous(name = "Autonomous Red Spec Push")
 public class RedSpecimenPush extends OpMode {
     private Follower follower;
     private Timer pathTimer, actionTimer, opmodeTimer;

@@ -12,14 +12,14 @@ public class YellowRedPipeline extends OpenCvPipeline {
     private static final Scalar UPPER_RED1 = new Scalar(10, 255, 255);
     private static final Scalar LOWER_RED2 = new Scalar(170, 100, 100);
     private static final Scalar UPPER_RED2 = new Scalar(180, 255, 255);
-    private static final Scalar LOWER_YELLOW = new Scalar(10, 150, 100);
+    private static final Scalar LOWER_YELLOW = new Scalar(11, 100, 100);
     private static final Scalar UPPER_YELLOW = new Scalar(40, 255, 255);
 
     // Define Region of Interest (ROI) coordinates
-    private static final int ROI_X_START = 220;
-    private static final int ROI_X_END = 420;
-    private static final int ROI_Y_START = 0;
-    private static final int ROI_Y_END = 200;
+    private static final int ROI_X_START = 0;
+    private static final int ROI_X_END = 320;
+    private static final int ROI_Y_START = 100;
+    private static final int ROI_Y_END = 380;
 
     // Mats for processing images
     private Mat hsvMat = new Mat();
@@ -32,7 +32,7 @@ public class YellowRedPipeline extends OpenCvPipeline {
     @Override
     public Mat processFrame(Mat input) {
         // Convert input image from BGR to HSV color space
-        Imgproc.cvtColor(input, hsvMat, Imgproc.COLOR_BGR2HSV);
+        Imgproc.cvtColor(input, hsvMat, Imgproc.COLOR_RGB2HSV);
 
         // Create binary masks for detecting red and yellow colors
         Core.inRange(hsvMat, LOWER_RED1, UPPER_RED1, redMask);
@@ -78,7 +78,7 @@ public class YellowRedPipeline extends OpenCvPipeline {
         }
 
         // If a largest contour was found, draw it on the frame
-        if (largestContour != null) {
+        if (largestContour != null && Imgproc.contourArea(largestContour) > 10000) {
             blockDetected = true;
             Rect boundingRect = Imgproc.boundingRect(largestContour);
             Scalar color = (redContours.contains(largestContour)) ? new Scalar(0, 0, 255) : new Scalar(0, 255, 255);  // Red for red contours, yellow for yellow
@@ -92,6 +92,7 @@ public class YellowRedPipeline extends OpenCvPipeline {
         }
 
         // Return the processed frame
+        Imgproc.rectangle(input, roi.tl(), roi.br(), new Scalar(0, 255, 255), 2);
         return input;
     }
 
@@ -105,7 +106,7 @@ public class YellowRedPipeline extends OpenCvPipeline {
         if (!blockDetected) {
             return -1; // No block detected
         }
-        return (width > height) ? 1 : 0; // 1: Horizontal, 0: Vertical
+        // i swapped these bcause camera is sideways
+        return (width > height) ? 0 : 1; // 1: Horizontal, 0: Vertical
     }
 }
-
