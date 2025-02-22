@@ -14,12 +14,14 @@ public class YellowRedPipeline extends OpenCvPipeline {
     private static final Scalar UPPER_RED2 = new Scalar(180, 255, 255);
     private static final Scalar LOWER_YELLOW = new Scalar(11, 100, 100);
     private static final Scalar UPPER_YELLOW = new Scalar(40, 255, 255);
+    private static final Scalar LOWER_BLUE = new Scalar(100, 150, 100);
+    private static final Scalar UPPER_BLUE = new Scalar(140, 255, 255);
 
     // Define Region of Interest (ROI) coordinates
     private static final int ROI_X_START = 0;
-    private static final int ROI_X_END = 320;
-    private static final int ROI_Y_START = 100;
-    private static final int ROI_Y_END = 380;
+    private static final int ROI_X_END = 200;
+    private static final int ROI_Y_START = 140;
+    private static final int ROI_Y_END = 340;
 
     // Mats for processing images
     private Mat hsvMat = new Mat();
@@ -77,8 +79,13 @@ public class YellowRedPipeline extends OpenCvPipeline {
             }
         }
 
+        double areaRatio = 0;
+        if (largestContour != null) {
+            areaRatio = (Imgproc.contourArea(largestContour)/(roi.width * roi.height));
+        }
+
         // If a largest contour was found, draw it on the frame
-        if (largestContour != null && Imgproc.contourArea(largestContour) > 10000) {
+        if (largestContour != null && areaRatio > 0.3) {
             blockDetected = true;
             Rect boundingRect = Imgproc.boundingRect(largestContour);
             Scalar color = (redContours.contains(largestContour)) ? new Scalar(0, 0, 255) : new Scalar(0, 255, 255);  // Red for red contours, yellow for yellow
@@ -107,6 +114,6 @@ public class YellowRedPipeline extends OpenCvPipeline {
             return -1; // No block detected
         }
         // i swapped these bcause camera is sideways
-        return (width > height) ? 0 : 1; // 1: Horizontal, 0: Vertical
+        return (width*1.4 > height) ? 0 : 1; // 1: Horizontal, 0: Vertical
     }
 }
