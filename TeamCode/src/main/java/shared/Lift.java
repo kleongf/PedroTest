@@ -8,8 +8,8 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 
 public class Lift {
     private final PIDController controller;
-    public static double p = 0.08, i = 0.02, d = 0.002;
-    public static double f = 0.002;
+    public static double p = 0.05, i = 0.01, d = 0.003;
+    public static double f = 0.005;
     public static double target = ANGLE_ZERO;
     // keep testing offset
     private static double offset = ANGLE_ZERO;
@@ -43,13 +43,23 @@ public class Lift {
 
     public double getTarget() { return target; }
 
+    public double getPower() {
+        double coefficient = multiplier.calculateMultiplier(extendMotor.getCurrentPosition());
+        // double multiplier = 1 + (extendMotor.getCurrentPosition() / 700.0) * 1.5;
+        double armPos = ((encoder.getVoltage() / 3.231 * 360) + offset + inherentOffset) % 360;
+        double pid = controller.calculate(armPos, target);
+        double ff = Math.cos(Math.toRadians((encoder.getVoltage() / 3.231 * 360))) * f * coefficient;
+        return pid + ff;
+
+    }
+
     public void loop() {
         // was 1 and 1.5
         double coefficient = multiplier.calculateMultiplier(extendMotor.getCurrentPosition());
         // double multiplier = 1 + (extendMotor.getCurrentPosition() / 700.0) * 1.5;
-        double armPos = ((encoder.getVoltage() / 3.235 * 360) + offset + inherentOffset) % 360;
+        double armPos = ((encoder.getVoltage() / 3.231 * 360) + offset + inherentOffset) % 360;
         double pid = controller.calculate(armPos, target);
-        double ff = Math.cos(Math.toRadians((encoder.getVoltage() / 3.235 * 360))) * f * coefficient;
+        double ff = Math.cos(Math.toRadians((encoder.getVoltage() / 3.231 * 360))) * f * coefficient;
         double power = pid + ff;
         motorOne.setPower(-power);
         motorTwo.setPower(-power);

@@ -34,29 +34,20 @@ import org.openftc.easyopencv.OpenCvCamera;
 import org.openftc.easyopencv.OpenCvCameraFactory;
 import org.openftc.easyopencv.OpenCvCameraRotation;
 
-@Autonomous(name = "Autonomous Red Claw CV no rotating test")
-public class RedSampleNoRotate extends OpMode {
+@Autonomous(name = "Autonomous Vision Test")
+public class VisionTest extends OpMode {
     private Follower follower;
     private Timer pathTimer, actionTimer, opmodeTimer;
     private int pathState;
 
     /** Start Pose of our robot */
-    private final Pose startPose = new Pose(134, 32, Math.toRadians(180));
+    private final Pose startPose = new Pose(123.5, 18.5, Math.toRadians(135));
 
     /** Scoring Pose of our robot. It is facing the submersible at a -45 degree (315 degree) angle. */
     private final Pose scorePose = new Pose(123.5, 18.5, Math.toRadians(135));
 
-    /** Lowest (First) Sample from the Spike Mark */
-    private final Pose pickup1Pose = new Pose(116, 23, Math.toRadians(180));
-
-    private final Pose pickup2Pose = new Pose(116, 13, Math.toRadians(180));
-
-    private final Pose pickup3Pose = new Pose(116, 12, Math.toRadians(208));
-
     private final Pose submersibleStartPose = new Pose(80, 48, Math.toRadians(90));
 
-    private Path scorePreload, park;
-    private PathChain grabPickup1, grabPickup2, grabPickup3, scorePickup1, scorePickup2, scorePickup3;
     private PathChain submersible1, submersible2, submersible3, submersible4, scoreSubmersible1, scoreSubmersible2, scoreSubmersible3, scoreSubmersible4, goToSubmersible, scorePickup;
 
     public DcMotorEx liftMotorOne;
@@ -123,13 +114,6 @@ public class RedSampleNoRotate extends OpMode {
         }
     };
 
-    Runnable downRunnable = new Runnable() {
-        @Override
-        public void run() {
-            lift.setTarget(10);
-        }
-    };
-
     // 0.8s
     public void prepareScore() {
         if (actionTimer.getElapsedTimeSeconds() < 0.2) {
@@ -148,41 +132,18 @@ public class RedSampleNoRotate extends OpMode {
         }
     }
 
-    // 0.6s
-    public void preparePreload() {
-        if (actionTimer.getElapsedTimeSeconds() < 0.2) {
-            lift.setTarget(ANGLE_UP_AUTO);
-        } else if (actionTimer.getElapsedTimeSeconds() < 0.4) {
-            extend.setTarget(EXTEND_HIGH_AUTO);
-        } else if (actionTimer.getElapsedTimeSeconds() < 0.6) {
-            intake.score();
-        }
-    }
-
-    // 0.6s
-    public void downAndExtend(int extendAmount) {
-        if (actionTimer.getElapsedTimeSeconds() < 0.2) {
-            // extend out
-            extend.setTarget(0);
-        } else if (actionTimer.getElapsedTimeSeconds() < 0.4) {
-            // lift down
-            lift.setTarget(13);
-            intake.submersibleDown();
-        } else if (actionTimer.getElapsedTimeSeconds() < 0.6) {
-            // extend out
-            extend.setTarget(extendAmount);
-        }
-    }
-
-    // 0.8s
+    // 1.0s
     public void grabFromSubmersible() {
         // make sure there is enough time to turn intake
         if (actionTimer.getElapsedTimeSeconds() > 0.15) {
             if (actionTimer.getElapsedTimeSeconds() < 0.3) {
-                lift.setTarget(10);
+                lift.setTarget(9 - Math.toDegrees(Math.atan(1 / (12 + (extend.getCurrentPosition() / 29.0)))));
             } else if (actionTimer.getElapsedTimeSeconds() < 0.5) {
                 intake.close();
             } else if (actionTimer.getElapsedTimeSeconds() < 0.8) {
+                // need the extra push
+                lift.setTarget(ANGLE_ZERO + 5);
+            } else if (actionTimer.getElapsedTimeSeconds() < 1) {
                 intake.score();
             }
         }
@@ -202,73 +163,6 @@ public class RedSampleNoRotate extends OpMode {
         Point control3Point = new Point(72-(2*x3), 24, Point.CARTESIAN);
         Point control4Point = new Point(72-(2*x4), 24, Point.CARTESIAN);
 
-
-        scorePreload = new Path(new BezierLine(new Point(startPose), new Point(scorePose)));
-        scorePreload.setLinearHeadingInterpolation(startPose.getHeading(), scorePose.getHeading());
-
-        grabPickup1 = follower.pathBuilder()
-                .addPath(
-                        new BezierLine(
-                                new Point(scorePose),
-                                new Point(pickup1Pose)
-                        )
-                )
-                .setLinearHeadingInterpolation(scorePose.getHeading(), pickup1Pose.getHeading())
-                // TODO: dont add this yet, but consider it for other things too
-                // could use for everything...
-//                .addParametricCallback(0.8, downRunnable)
-//                .addParametricCallback(0.9, closeRunnable)
-                .build();
-
-        scorePickup1 = follower.pathBuilder()
-                .addPath(
-                        new BezierLine(
-                                new Point(pickup1Pose),
-                                new Point(scorePose)
-                        )
-                )
-                .setLinearHeadingInterpolation(pickup1Pose.getHeading(), scorePose.getHeading())
-                .build();
-
-        grabPickup2= follower.pathBuilder()
-                .addPath(
-                        new BezierLine(
-                                new Point(scorePose),
-                                new Point(pickup2Pose)
-                        )
-                )
-                .setLinearHeadingInterpolation(scorePose.getHeading(), pickup2Pose.getHeading())
-                .build();
-
-        scorePickup2 = follower.pathBuilder()
-                .addPath(
-                        new BezierLine(
-                                new Point(pickup2Pose),
-                                new Point(scorePose)
-                        )
-                )
-                .setLinearHeadingInterpolation(pickup2Pose.getHeading(), scorePose.getHeading())
-                .build();
-
-        grabPickup3 = follower.pathBuilder()
-                .addPath(
-                        new BezierLine(
-                                new Point(scorePose),
-                                new Point(pickup3Pose)
-                        )
-                )
-                .setLinearHeadingInterpolation(scorePose.getHeading(), pickup3Pose.getHeading())
-                .build();
-
-        scorePickup3 = follower.pathBuilder()
-                .addPath(
-                        new BezierLine(
-                                new Point(pickup3Pose),
-                                new Point(scorePose)
-                        )
-                )
-                .setLinearHeadingInterpolation(pickup3Pose.getHeading(), scorePose.getHeading())
-                .build();
 
         submersible1 = follower.pathBuilder()
                 .addPath(
@@ -384,75 +278,11 @@ public class RedSampleNoRotate extends OpMode {
     }
     public void autonomousPathUpdate() {
         switch (pathState) {
-            case 0:
-                follower.followPath(scorePreload, false);
-                actionTimer.resetTimer();
-                setPathState(1);
-                break;
-            case 1:
-                if (follower.isBusy()) {
-                    preparePreload();
-                }
-                if(!follower.isBusy()) {
-                    intake.open();
-                    follower.followPath(grabPickup1, false);
-                    actionTimer.resetTimer();
-                    setPathState(2);
-                }
-                break;
-            case 2:
-                if (follower.isBusy()) { downAndExtend(250); }
-                if (!follower.isBusy()) {
-                    intake.close();
-                    actionTimer.resetTimer();
-                    follower.followPath(scorePickup1, false);
-                    setPathState(3);
-                }
-                break;
-            case 3:
-                if (follower.isBusy()) {prepareScore();}
-                if (!follower.isBusy()) {
-                    intake.open();
-                    follower.followPath(grabPickup2, false);
-                    actionTimer.resetTimer();
-                    setPathState(4);
-                }
-                break;
-            case 4:
-                if (follower.isBusy()) {downAndExtend(220);}
-                if (!follower.isBusy()) {
-                    intake.close();
-                    actionTimer.resetTimer();
-                    follower.followPath(scorePickup2, false);
-                    setPathState(5);
-                }
-                break;
-            case 5:
-                if (follower.isBusy()) {prepareScore();}
-                if (!follower.isBusy()) {
-                    intake.open();
-                    follower.followPath(grabPickup3, false);
-                    actionTimer.resetTimer();
-                    setPathState(6);
-                }
-                break;
-            case 6:
-                if (follower.isBusy()) {downAndExtend(300);}
-                if (!follower.isBusy()) {
-                    intake.close();
-                    actionTimer.resetTimer();
-                    follower.followPath(scorePickup3, false);
-                    setPathState(7);
-                }
-                break;
             case 7:
-                if (follower.isBusy()) {prepareScore();}
-                if (!follower.isBusy()) {
-                    intake.open();
-                    follower.followPath(submersible1, true);
-                    actionTimer.resetTimer();
-                    setPathState(8);
-                }
+                intake.open();
+                follower.followPath(submersible1, true);
+                actionTimer.resetTimer();
+                setPathState(8);
                 break;
             case 8:
                 if (!follower.isBusy()) {
@@ -460,7 +290,7 @@ public class RedSampleNoRotate extends OpMode {
                     actionTimer.resetTimer();
                     setPathState(9);
                 } else {
-                    lift.setTarget(ANGLE_ZERO);
+                    lift.setTarget(ANGLE_ZERO + 3);
                     extend.setTarget(0);
                     intake.submersibleDown();
                 }
@@ -615,7 +445,7 @@ public class RedSampleNoRotate extends OpMode {
         telemetry.addData("Detected", yellowPipeline.isBlockDetected());
         telemetry.addData("Orientation", yellowPipeline.getOrientation());
         telemetry.addData("Timer", actionTimer.getElapsedTimeSeconds());
-        telemetry.addData("busy", follower.isBusy());
+        telemetry.addData("pivot power", lift.getPower());
         telemetry.update();
     }
 
@@ -695,7 +525,7 @@ public class RedSampleNoRotate extends OpMode {
     public void start() {
         buildPaths();
         opmodeTimer.resetTimer();
-        setPathState(0);
+        setPathState(7);
     }
 
     /** We do not use this because everything should automatically disable **/
@@ -703,6 +533,4 @@ public class RedSampleNoRotate extends OpMode {
     public void stop() {
     }
 }
-
-
 

@@ -21,7 +21,9 @@ public class FConstants {
         FollowerConstants.rightRearMotorDirection = DcMotorSimple.Direction.REVERSE;
 
         // get mass in kg (REQUIRED)
-        FollowerConstants.mass = 13;
+        // TODO: Change back if unnecessary
+        // increased by 4.4 lbs because of counterweight (was 13
+        FollowerConstants.mass = 15;
 
         FollowerConstants.xMovement = 74.3369;
         FollowerConstants.yMovement = 53.2528;

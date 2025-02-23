@@ -160,6 +160,7 @@ public class RedSample extends OpMode {
                 liftState = LiftState.LIFT_START;
         }
 
+        // TODO: Open, INTAKe DOWN (not the full arm), and close+flip up on release
         switch (intakeState) {
             // left stick: open, down, close on release
             // right stick: open

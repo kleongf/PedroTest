@@ -36,8 +36,9 @@ public class Claw {
         this.intakeMotorTwo = hardwareMap.get(Servo.class, "intakeMotorTwo");
         this.spinMotor = hardwareMap.get(Servo.class, "spinMotor");
 
+        // TODO: UNCOMMENT WHEN CLAW TUNING IS DONE
+
         close();
-        submersibleUp();
         spinVertical();
     }
 
@@ -49,34 +50,54 @@ public class Claw {
         }
     }
 
+    public void am1(int x) {
+        angleMotorOne.setPosition(x);
+    }
+
+    public void am2(int x) {
+        angleMotorTwo.setPosition(x);
+    }
+
+    public void im1(int x) {
+        intakeMotorOne.setPosition(x);
+    }
+
+    public void im2(int x) {
+        intakeMotorTwo.setPosition(x);
+    }
+
+    public void sm1(double x) {
+        spinMotor.setPosition(x);
+    }
+
     public void close() {
-        intakeMotorOne.setPosition(1);
+        intakeMotorOne.setPosition(0);
         intakeMotorTwo.setPosition(1);
     }
     public void open() {
-        intakeMotorOne.setPosition(0);
+        intakeMotorOne.setPosition(1);
         intakeMotorTwo.setPosition(0);
     }
 
     public void spinHorizontal() {
         // move to 90 degrees = 0.5
-        spinMotor.setPosition(0.5);
+        spinMotor.setPosition(0.78);
         horizontal = true;
     }
 
     public void spinVertical() {
-        spinMotor.setPosition(0);
+        spinMotor.setPosition(0.32);
         horizontal = false;
     }
 
     public void score() {
-        angleMotorOne.setPosition(0.8);
-        angleMotorTwo.setPosition(0.8);
+        angleMotorOne.setPosition(1);
+        angleMotorTwo.setPosition(1);
     }
 
     public void submersibleDown() {
-        angleMotorOne.setPosition(0.24);
-        angleMotorTwo.setPosition(0.24);
+        angleMotorOne.setPosition(0);
+        angleMotorTwo.setPosition(0);
     }
 
     public void submersibleUp() {

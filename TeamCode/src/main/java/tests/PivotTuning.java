@@ -52,14 +52,15 @@ public class PivotTuning extends OpMode {
         controller.setPID(p, i, d);
 
         double ffcoef = multiplier.calculateMultiplier(extendMotor.getCurrentPosition());
-        double armPos = ((encoder.getVoltage() / 3.235 * 360) + offset + inherentOffset) % 360;
+        double armPos = ((encoder.getVoltage() / 3.231 * 360) + offset + inherentOffset) % 360;
         double pid = controller.calculate(armPos, target);
-        double ff = Math.cos(Math.toRadians((encoder.getVoltage() / 3.235 * 360))) * f * ffcoef;
+        double ff = Math.cos(Math.toRadians((encoder.getVoltage() / 3.231 * 360))) * f * ffcoef;
         double power = pid + ff;
         motorOne.setPower(-power);
         motorTwo.setPower(-power);
 
         telemetry.addData("pos", armPos);
+        telemetry.addData("power", power);
         telemetry.addData("target", target);
         telemetry.addData("extend", extendMotor.getCurrentPosition());
         telemetry.addData("voltage", encoder.getVoltage());

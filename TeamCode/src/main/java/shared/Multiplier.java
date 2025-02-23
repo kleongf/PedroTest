@@ -6,7 +6,7 @@ public class Multiplier {
     private double m2 = 0.200957;
     private double m3 = 0.133725;
     private double m4 = 0.043328 + 0.009764;
-    private double mLast = 0.05;
+    private double mLast = 0.22;
 
     // in
     private double pivotPoint = 2.65;
@@ -17,7 +17,7 @@ public class Multiplier {
     private double l2 = 11.3;
     private double l3 = 10;
     private double l4 = 10;
-    private double lLast = 2;
+    private double lLast = 1;
 
     public double calculateMultiplier(int extendLength) {
         double lengthInches = extendLength / ticksPerInch;

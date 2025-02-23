@@ -13,11 +13,12 @@ public final class Constants {
 
     // TELEOP
     public static final int ANGLE_UP = 108;
-    public static final int ANGLE_ZERO = 11;
+    // changed from 11 to higher value to grab
+    public static final int ANGLE_ZERO = 10;
     public static final int ANGLE_HANG = 110;
     public static final double ANGLE_MID = 9;
     // problem is that extension might be a bit too long, angle stops working
-    // find another extension that might work
+    // find another extension that might work\
     public static final double ANGLE_MAX = 10;
     public static final int EXTEND_HIGH = 700;
     public static final int EXTEND_ZERO = 0;
