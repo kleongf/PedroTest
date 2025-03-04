@@ -5,20 +5,26 @@ import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.arcrobotics.ftclib.controller.PIDController;
 import com.arcrobotics.ftclib.controller.PIDFController;
+import com.arcrobotics.ftclib.util.InterpLUT;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.PIDCoefficients;
+import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 
 import shared.Multiplier;
 
 @Config
 @TeleOp
-public class PivotTuning extends OpMode {
+public class PivotDoublePID extends OpMode {
     private PIDFController controller;
-    public static double p = 0.0, i = 0, d = 0.00;
-    public static double f = 0;
+    public static double pTop = 0.02, dTop = 0.001;
+    public static double pMiddle = 0.04, dMiddle = 0.002;
+    public static double pBottom = 0.02, dBottom = 0.001;
+
+    public static double f = 0.002;
     public static double target = 59;
     private static double inherentOffset = 59;
     private DcMotorEx motorOne;
@@ -27,18 +33,15 @@ public class PivotTuning extends OpMode {
     private AnalogInput encoder;
     private Multiplier multiplier;
 
-    // public static double p1 = 0.0, i1 = 0.0, d1 = 0.0,
-    public static double f1 = 0.0;
-    public static boolean secondaryPIDEnabled = true;
+    private InterpLUT pCoefficients;
+    private InterpLUT dCoefficients;
 
-    // best values so far: d=0.002, p=0.08, i=0.02, f=0.0022
-    // however it seems to be doing fine so...
+    public static boolean secondaryPIDEnabled = true;
 
     @Override
     public void init() {
         telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
-        controller = new PIDFController(p, i, d, 0);
-        controller.setPIDF(p, i, d, 0);
+        controller = new PIDFController(pBottom, 0, dBottom, 0);
         motorOne = hardwareMap.get(DcMotorEx.class, "liftMotorOne");
         motorTwo = hardwareMap.get(DcMotorEx.class, "liftMotorTwo");
         extendMotor = hardwareMap.get(DcMotorEx.class, "extendMotorTwo");
@@ -49,6 +52,10 @@ public class PivotTuning extends OpMode {
         extendMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         extendMotor.setDirection(DcMotor.Direction.REVERSE);
         multiplier = new Multiplier();
+
+
+        pCoefficients = new InterpLUT();
+        dCoefficients = new InterpLUT();
     }
 
     public int sgn(double x) {
@@ -63,42 +70,43 @@ public class PivotTuning extends OpMode {
     @Override
     public void loop() {
         double armPos = ((encoder.getVoltage() / 3.231 * 360)) % 360;
-
-        // just tune a feedforward constant
-//        if (Math.abs(armPos-target) < 10 && Math.abs(armPos-target) > 0.5) {
-//            controller.setPIDF(p1, i1, d1, 0);
-//        } else {
-//            controller.setPIDF(p, i, d, 0);
-//            // Kf: a constant needed to overcome the friction force
-//        }
-        controller.setPIDF(p, i , d, 0);
-
         double fgcoef = multiplier.calculateMultiplier(extendMotor.getCurrentPosition());
-        double pid = controller.calculate(armPos, target);
         double fg = Math.cos(Math.toRadians((encoder.getVoltage() / 3.231 * 360) - inherentOffset)) * f * fgcoef;
-        double power = 0;
 
-        // small movements: add a feed forward to counteract friction
-        // && Math.abs(motorOne.getVelocity() < something) this could prevent it from moving too fast (ticks/s)
-        // at the bottom of large movements but tbh i dont think it will matter
-        if (target < 70 && Math.abs(armPos-target) < 10 && Math.abs(armPos-target) > 0.5 && Math.abs(motorOne.getVelocity()) < 200) {
-            // ff neg: arm goes up
-            // ff pos: arm goes down
-            // if target < armpos, then ff is pos
-            double ff = f1 * sgn(target-armPos);
-            power = pid + fg + ff;
-        } else {
-            power = pid + fg;
-        }
+        // different p and d values for different parts
+        // from top to middle: low p and low d
+        // middle: high p and d
+        // bottom: low p and low d
+        // very bottom: biggest p and biggest d
+        // this will get us closer to the trapezoidal motion profile
 
-        // TODO: I JUST REALIZED THAT FG MAY NEED TO BE NEGATIVE?
-        // CHANGE THIS IF IT WORKS
+        pCoefficients = new InterpLUT();
+        dCoefficients = new InterpLUT();
+
+        pCoefficients.add(55, pBottom);
+        pCoefficients.add(110, pMiddle);
+        pCoefficients.add(170, pTop);
+
+        dCoefficients.add(55, dBottom);
+        dCoefficients.add(110, dMiddle);
+        dCoefficients.add(170, dTop);
+
+        pCoefficients.createLUT();
+        dCoefficients.createLUT();
+
+        double Kp = pCoefficients.get(armPos);
+        double Kd = dCoefficients.get(armPos);
+
+        controller.setPIDF(Kp, 0, Kd, 0);
+
+        double pid = controller.calculate(armPos, target);
+
+        double power = pid + fg;
 
         motorOne.setPower(-power);
         motorTwo.setPower(-power);
 
         telemetry.addData("pos", armPos);
-        telemetry.addData("velocity", motorOne.getVelocity());
         telemetry.addData("power", -power);
         telemetry.addData("target", target);
         telemetry.addData("extend", extendMotor.getCurrentPosition());
@@ -107,6 +115,3 @@ public class PivotTuning extends OpMode {
 
     }
 }
-
-
-

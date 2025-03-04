@@ -5,6 +5,7 @@ import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.arcrobotics.ftclib.controller.PIDController;
 import com.arcrobotics.ftclib.controller.PIDFController;
+import com.pedropathing.util.Timer;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.AnalogInput;
@@ -15,9 +16,10 @@ import shared.Multiplier;
 
 @Config
 @TeleOp
-public class PivotTuning extends OpMode {
+public class PDFLTuning extends OpMode {
     private PIDFController controller;
     public static double p = 0.0, i = 0, d = 0.00;
+    public static double frictionCoefficient = 1.0;
     public static double f = 0;
     public static double target = 59;
     private static double inherentOffset = 59;
@@ -26,13 +28,18 @@ public class PivotTuning extends OpMode {
     private DcMotorEx extendMotor;
     private AnalogInput encoder;
     private Multiplier multiplier;
-
-    // public static double p1 = 0.0, i1 = 0.0, d1 = 0.0,
     public static double f1 = 0.0;
-    public static boolean secondaryPIDEnabled = true;
+    public static double kV = 0.0, kS = 0.0;
+    private double prevPos;
+    public Timer timer;
 
-    // best values so far: d=0.002, p=0.08, i=0.02, f=0.0022
-    // however it seems to be doing fine so...
+    // concern: the friction overcoming thing might be too high and causes some jerk
+    // this leads to oscillation
+    // solution: if the error threshold is not made, make sure that the power does not exceed the threshold
+    // im afraid this will lead to over/undershooting with larger movements though
+    // so solution: also check to see what the motor velocities are
+
+    public static double errorThreshold = 1.0;
 
     @Override
     public void init() {
@@ -48,6 +55,8 @@ public class PivotTuning extends OpMode {
         extendMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         extendMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         extendMotor.setDirection(DcMotor.Direction.REVERSE);
+        timer = new Timer();
+        prevPos = ((encoder.getVoltage() / 3.231 * 360)) % 360;
         multiplier = new Multiplier();
     }
 
@@ -62,43 +71,48 @@ public class PivotTuning extends OpMode {
 
     @Override
     public void loop() {
-        double armPos = ((encoder.getVoltage() / 3.231 * 360)) % 360;
-
-        // just tune a feedforward constant
-//        if (Math.abs(armPos-target) < 10 && Math.abs(armPos-target) > 0.5) {
-//            controller.setPIDF(p1, i1, d1, 0);
-//        } else {
-//            controller.setPIDF(p, i, d, 0);
-//            // Kf: a constant needed to overcome the friction force
-//        }
         controller.setPIDF(p, i , d, 0);
+        // velocity = dx/dt measured in degrees/second
+        double dt = timer.getElapsedTimeSeconds();
+        double armPos = ((encoder.getVoltage() / 3.231 * 360)) % 360;
+        double dx = armPos - prevPos;
+        double velocity = dx/dt;
 
         double fgcoef = multiplier.calculateMultiplier(extendMotor.getCurrentPosition());
         double pid = controller.calculate(armPos, target);
         double fg = Math.cos(Math.toRadians((encoder.getVoltage() / 3.231 * 360) - inherentOffset)) * f * fgcoef;
         double power = 0;
 
-        // small movements: add a feed forward to counteract friction
-        // && Math.abs(motorOne.getVelocity() < something) this could prevent it from moving too fast (ticks/s)
-        // at the bottom of large movements but tbh i dont think it will matter
-        if (target < 70 && Math.abs(armPos-target) < 10 && Math.abs(armPos-target) > 0.5 && Math.abs(motorOne.getVelocity()) < 200) {
-            // ff neg: arm goes up
-            // ff pos: arm goes down
-            // if target < armpos, then ff is pos
+        // TODO:
+        // there is no velocity because the motor is not connected to an encoder
+        // rn this is degrees/second
+
+        if (Math.abs(target-armPos) > errorThreshold && Math.abs(velocity) < 20) {
             double ff = f1 * sgn(target-armPos);
-            power = pid + fg + ff;
+
+            if (Math.abs(pid + fg) < Math.abs(ff)) {
+                // make sure that there is enough power to move the arm
+                power = ff;
+            } else {
+                // idk if this will work lol
+                if (sgn(target-armPos) > 0) {
+                    power = pid + ff - fg;
+                } else {
+                    power = pid + ff + fg;
+                }
+            }
         } else {
+            // motor is moving fast (and has a lot of impulse) OR is within target range OR has sufficient power
             power = pid + fg;
         }
-
-        // TODO: I JUST REALIZED THAT FG MAY NEED TO BE NEGATIVE?
-        // CHANGE THIS IF IT WORKS
+        prevPos = armPos;
+        timer.resetTimer();
 
         motorOne.setPower(-power);
         motorTwo.setPower(-power);
 
         telemetry.addData("pos", armPos);
-        telemetry.addData("velocity", motorOne.getVelocity());
+        telemetry.addData("velocity", velocity);
         telemetry.addData("power", -power);
         telemetry.addData("target", target);
         telemetry.addData("extend", extendMotor.getCurrentPosition());
@@ -106,7 +120,8 @@ public class PivotTuning extends OpMode {
         telemetry.update();
 
     }
+    @Override
+    public void start() {
+        timer.resetTimer();
+    }
 }
-
-
-

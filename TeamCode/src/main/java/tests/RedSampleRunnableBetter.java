@@ -3,6 +3,7 @@ package tests;
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.pedropathing.pathgen.BezierPoint;
 import com.pedropathing.util.Constants;
+import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.pedropathing.follower.Follower;
@@ -34,11 +35,17 @@ import org.openftc.easyopencv.OpenCvCamera;
 import org.openftc.easyopencv.OpenCvCameraFactory;
 import org.openftc.easyopencv.OpenCvCameraRotation;
 
-@Autonomous(name = "Autonomous Sample Runnable")
-public class RedSampleRunnable extends OpMode {
+import java.util.ArrayList;
+import java.util.List;
+
+@Autonomous(name = "Autonomous Sample Runnable 2.0")
+public class RedSampleRunnableBetter extends OpMode {
     private Follower follower;
     private Timer pathTimer, actionTimer, opmodeTimer;
     private int pathState;
+
+    private Timer loopTimer;
+    private ArrayList<Double> loopTimes;
 
     /** Start Pose of our robot */
     private final Pose startPose = new Pose(134, 32, Math.toRadians(180));
@@ -189,17 +196,24 @@ public class RedSampleRunnable extends OpMode {
         }
     };
 
+    Runnable intakeMidRunnable = new Runnable() {
+        @Override
+        public void run() {
+            intake.submersibleMid();
+        }
+    };
+
     Runnable extend1Runnable = new Runnable() {
         @Override
         public void run() {
-            extend.setTarget(220);
+            extend.setTarget(130);
         }
     };
 
     Runnable extend2Runnable = new Runnable() {
         @Override
         public void run() {
-            extend.setTarget(220);
+            extend.setTarget(130);
         }
     };
 
@@ -237,10 +251,10 @@ public class RedSampleRunnable extends OpMode {
      * It is necessary to do this so that all the paths are built before the auto starts. **/
     public void buildPaths() {
 
-        Pose submersible1Pose = new Pose(72-(2*x1), 48, Math.toRadians(90));
-        Pose submersible2Pose = new Pose(72-(2*x2), 48, Math.toRadians(90));
-        Pose submersible3Pose = new Pose(72-(2*x3), 48, Math.toRadians(90));
-        Pose submersible4Pose = new Pose(72-(2*x4), 48, Math.toRadians(90));
+        Pose submersible1Pose = new Pose(72-(2*x1), 50, Math.toRadians(90));
+        Pose submersible2Pose = new Pose(72-(2*x2), 50, Math.toRadians(90));
+        Pose submersible3Pose = new Pose(72-(2*x3), 50, Math.toRadians(90));
+        Pose submersible4Pose = new Pose(72-(2*x4), 50, Math.toRadians(90));
 
         Point control1Point = new Point(72-(2*x1), 24, Point.CARTESIAN);
         Point control2Point = new Point(72-(2*x2), 24, Point.CARTESIAN);
@@ -264,10 +278,10 @@ public class RedSampleRunnable extends OpMode {
                         )
                 )
                 .setLinearHeadingInterpolation(scorePose.getHeading(), pickup1Pose.getHeading())
-                .addParametricCallback(0.1, retractRunnable)
-                .addParametricCallback(0.4, liftDownDefaultRunnable)
-                .addParametricCallback(0.5, intakeDownRunnable)
-                .addParametricCallback(0.7, extend1Runnable)
+                .addParametricCallback(0.1, intakeMidRunnable)
+                .addParametricCallback(0.3, retractRunnable)
+                .addParametricCallback(0.5, liftDownSubmersibleRunnable)
+                .addParametricCallback(0.7, extend3Runnable)
                 .addParametricCallback(0.98, resetTimerRunnable)
                 .build();
 
@@ -294,10 +308,10 @@ public class RedSampleRunnable extends OpMode {
                         )
                 )
                 .setLinearHeadingInterpolation(scorePose.getHeading(), pickup2Pose.getHeading())
-                .addParametricCallback(0.1, retractRunnable)
-                .addParametricCallback(0.4, liftDownDefaultRunnable)
-                .addParametricCallback(0.5, intakeDownRunnable)
-                .addParametricCallback(0.6, extend2Runnable)
+                .addParametricCallback(0.1, intakeMidRunnable)
+                .addParametricCallback(0.3, retractRunnable)
+                .addParametricCallback(0.5, liftDownSubmersibleRunnable)
+                .addParametricCallback(0.7, extend3Runnable)
                 .addParametricCallback(0.98, resetTimerRunnable)
                 .build();
 
@@ -312,6 +326,7 @@ public class RedSampleRunnable extends OpMode {
                 .addParametricCallback(0.1, retractRunnable)
                 .addParametricCallback(0.3, liftUpRunnable)
                 .addParametricCallback(0.5, extendRunnable)
+                // call this after it is up by a certain amount or else it may crash
                 .addParametricCallback(0.9, intakeUpRunnable)
                 .addParametricCallback(0.98, resetTimerRunnable)
                 .build();
@@ -324,10 +339,10 @@ public class RedSampleRunnable extends OpMode {
                         )
                 )
                 .setLinearHeadingInterpolation(scorePose.getHeading(), pickup3Pose.getHeading())
-                .addParametricCallback(0.1, retractRunnable)
-                .addParametricCallback(0.4, liftDownDefaultRunnable)
-                .addParametricCallback(0.5, intakeDownRunnable)
-                .addParametricCallback(0.6, extend3Runnable)
+                .addParametricCallback(0.1, intakeMidRunnable)
+                .addParametricCallback(0.3, retractRunnable)
+                .addParametricCallback(0.5, liftDownSubmersibleRunnable)
+                .addParametricCallback(0.7, extend3Runnable)
                 .addParametricCallback(0.98, resetTimerRunnable)
                 .build();
 
@@ -450,7 +465,7 @@ public class RedSampleRunnable extends OpMode {
                 .addParametricCallback(0.98, resetTimerRunnable)
                 .build();
 
-        submersible4 = follower.pathBuilder()
+        scoreSubmersible4 = follower.pathBuilder()
                 .addPath(
                         new BezierCurve(
                                 new Point(submersible4Pose),
@@ -475,7 +490,7 @@ public class RedSampleRunnable extends OpMode {
                 break;
             case 1:
                 if(!follower.isBusy()) {
-                    if (actionTimer.getElapsedTimeSeconds() > 0.1) {
+                    if (actionTimer.getElapsedTimeSeconds() > 0.5) {
                         intake.open();
                         follower.followPath(grabPickup1, true);
                         setPathState(2);
@@ -484,19 +499,19 @@ public class RedSampleRunnable extends OpMode {
                 break;
             case 2:
                 if (!follower.isBusy()) {
-                    if (actionTimer.getElapsedTimeSeconds() > 0.7) {
+                    if (actionTimer.getElapsedTimeSeconds() > 2) {
                         follower.followPath(scorePickup1, true);
                         setPathState(3);
-                    } else if (actionTimer.getElapsedTimeSeconds() > 0.4) {
+                    } else if (actionTimer.getElapsedTimeSeconds() > 1.5) {
                         intake.close();
-                    } else if (actionTimer.getElapsedTimeSeconds() > 0.1) {
-                        lift.setTarget(ANGLE_ZERO);
+                    } else if (actionTimer.getElapsedTimeSeconds() > 0.8) {
+                        intake.submersibleDown();
                     }
                 }
                 break;
             case 3:
                 if (!follower.isBusy()) {
-                    if (actionTimer.getElapsedTimeSeconds() > 0.1) {
+                    if (actionTimer.getElapsedTimeSeconds() > 0.5) {
                         intake.open();
                         follower.followPath(grabPickup2, true);
                         setPathState(4);
@@ -505,19 +520,19 @@ public class RedSampleRunnable extends OpMode {
                 break;
             case 4:
                 if (!follower.isBusy()) {
-                    if (actionTimer.getElapsedTimeSeconds() > 0.7) {
+                    if (actionTimer.getElapsedTimeSeconds() > 2) {
                         follower.followPath(scorePickup2, true);
                         setPathState(5);
-                    } else if (actionTimer.getElapsedTimeSeconds() > 0.4) {
+                    } else if (actionTimer.getElapsedTimeSeconds() > 1.5) {
                         intake.close();
-                    } else if (actionTimer.getElapsedTimeSeconds() > 0.1) {
-                        lift.setTarget(ANGLE_ZERO);
+                    } else if (actionTimer.getElapsedTimeSeconds() > 0.8) {
+                        intake.submersibleDown();
                     }
                 }
                 break;
             case 5:
                 if (!follower.isBusy()) {
-                    if (actionTimer.getElapsedTimeSeconds() > 0.1) {
+                    if (actionTimer.getElapsedTimeSeconds() > 0.5) {
                         intake.open();
                         follower.followPath(grabPickup3, true);
                         setPathState(6);
@@ -526,19 +541,19 @@ public class RedSampleRunnable extends OpMode {
                 break;
             case 6:
                 if (!follower.isBusy()) {
-                    if (actionTimer.getElapsedTimeSeconds() > 0.7) {
+                    if (actionTimer.getElapsedTimeSeconds() > 2) {
                         follower.followPath(scorePickup3, true);
                         setPathState(7);
-                    } else if (actionTimer.getElapsedTimeSeconds() > 0.4) {
+                    } else if (actionTimer.getElapsedTimeSeconds() > 1.5) {
                         intake.close();
-                    } else if (actionTimer.getElapsedTimeSeconds() > 0.1) {
-                        lift.setTarget(ANGLE_ZERO);
+                    } else if (actionTimer.getElapsedTimeSeconds() > 0.8) {
+                        intake.submersibleDown();
                     }
                 }
                 break;
             case 7:
                 if (!follower.isBusy()) {
-                    if (actionTimer.getElapsedTimeSeconds() > 0.1) {
+                    if (actionTimer.getElapsedTimeSeconds() > 0.5) {
                         intake.open();
                         follower.followPath(submersible1, true);
                         setPathState(8);
@@ -696,11 +711,17 @@ public class RedSampleRunnable extends OpMode {
         lift.loop();
         extend.loop();
 
+        double currentTime = loopTimer.getElapsedTimeSeconds();
+        loopTimes.add(currentTime);
+        loopTimer.resetTimer();
+
         // Feedback to Driver Hub
         telemetry.addData("Busy", follower.isBusy());
-        telemetry.addData("Detected", yellowPipeline.isBlockDetected());
-        telemetry.addData("Orientation", yellowPipeline.getOrientation());
+//        telemetry.addData("Detected", yellowPipeline.isBlockDetected());
+//        telemetry.addData("Orientation", yellowPipeline.getOrientation());
         telemetry.addData("Timer", actionTimer.getElapsedTimeSeconds());
+        telemetry.addData("Loop Time", currentTime);
+        System.out.println(currentTime);
         telemetry.addData("busy", follower.isBusy());
         telemetry.update();
     }
@@ -708,9 +729,17 @@ public class RedSampleRunnable extends OpMode {
     /** This method is called once at the init of the OpMode. **/
     @Override
     public void init() {
+        List<LynxModule> allHubs = hardwareMap.getAll(LynxModule.class);
+
+        for (LynxModule hub : allHubs) {
+            hub.setBulkCachingMode(LynxModule.BulkCachingMode.AUTO);
+        }
+
         pathTimer = new Timer();
         opmodeTimer = new Timer();
         actionTimer = new Timer();
+        loopTimer = new Timer();
+        loopTimes = new ArrayList<>();
         opmodeTimer.resetTimer();
 
         liftMotorOne = hardwareMap.get(DcMotorEx.class, "liftMotorOne");
@@ -730,25 +759,25 @@ public class RedSampleRunnable extends OpMode {
         Constants.setConstants(FConstants.class, LConstants.class);
         follower = new Follower(hardwareMap);
         follower.setStartingPose(startPose);
-
-        phoneCam = OpenCvCameraFactory.getInstance().createWebcam(hardwareMap.get(WebcamName.class, "Webcam 1"));
-        FtcDashboard.getInstance().startCameraStream(phoneCam, 0);
         yellowPipeline = new YellowRedPipeline();
-        phoneCam.openCameraDeviceAsync(new OpenCvCamera.AsyncCameraOpenListener()
-        {
-            @Override
-            public void onOpened()
-            {
-                phoneCam.setPipeline(yellowPipeline);
-                phoneCam.startStreaming(640, 480, OpenCvCameraRotation.UPRIGHT);
-            }
 
-            @Override
-            public void onError(int errorCode)
-            {
-                telemetry.addLine("Error");
-            }
-        });
+//        phoneCam = OpenCvCameraFactory.getInstance().createWebcam(hardwareMap.get(WebcamName.class, "Webcam 1"));
+//        FtcDashboard.getInstance().startCameraStream(phoneCam, 0);
+//        phoneCam.openCameraDeviceAsync(new OpenCvCamera.AsyncCameraOpenListener()
+//        {
+//            @Override
+//            public void onOpened()
+//            {
+//                phoneCam.setPipeline(yellowPipeline);
+//                phoneCam.startStreaming(640, 480, OpenCvCameraRotation.UPRIGHT);
+//            }
+//
+//            @Override
+//            public void onError(int errorCode)
+//            {
+//                telemetry.addLine("Error");
+//            }
+//        });
     }
 
     /** This method is called continuously after Init while waiting for "play". **/
@@ -784,11 +813,20 @@ public class RedSampleRunnable extends OpMode {
     public void start() {
         buildPaths();
         opmodeTimer.resetTimer();
+        loopTimer.resetTimer();
         setPathState(0);
     }
 
     /** We do not use this because everything should automatically disable **/
     @Override
     public void stop() {
+        double avg = 0;
+        for (double x: loopTimes) {
+            avg += x;
+        }
+        avg = avg/loopTimes.size();
+
+        telemetry.addData("average loop time", avg);
     }
 }
+

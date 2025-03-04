@@ -1,10 +1,9 @@
-package shared;
+package robot.subsystems;
 
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
-import static shared.Constants.*;
 
-public class Claw {
+public class IntakeSubsystem {
 
     private final Servo angleMotorOne;
     private final Servo angleMotorTwo;
@@ -13,7 +12,7 @@ public class Claw {
     private final Servo spinMotor;
     private boolean horizontal = false;
 
-    public Claw(HardwareMap hardwareMap) {
+    public IntakeSubsystem(HardwareMap hardwareMap) {
         this.angleMotorOne = hardwareMap.get(Servo.class, "angleMotorOne");
         this.angleMotorTwo = hardwareMap.get(Servo.class, "angleMotorTwo");
         this.angleMotorOne.setDirection(Servo.Direction.REVERSE);
@@ -31,26 +30,6 @@ public class Claw {
         } else {
             spinHorizontal();
         }
-    }
-
-    public void am1(double x) {
-        angleMotorOne.setPosition(x);
-    }
-
-    public void am2(double x) {
-        angleMotorTwo.setPosition(x);
-    }
-
-    public void im1(double x) {
-        intakeMotorOne.setPosition(x);
-    }
-
-    public void im2(double x) {
-        intakeMotorTwo.setPosition(x);
-    }
-
-    public void sm1(double x) {
-        spinMotor.setPosition(x);
     }
 
     public void close() {
@@ -73,39 +52,20 @@ public class Claw {
         horizontal = false;
     }
 
-    public void score() {
-        angleMotorOne.setPosition(1);
-        angleMotorTwo.setPosition(1);
-    }
 
-    public void submersibleDown() {
+    public void down() {
         angleMotorOne.setPosition(0);
         angleMotorTwo.setPosition(0);
     }
 
-    public void submersibleUp() {
+    public void up() {
         angleMotorOne.setPosition(1);
         angleMotorTwo.setPosition(1);
     }
 
-    public void submersibleMid() {
+    public void mid() {
         angleMotorOne.setPosition(0.5);
         angleMotorTwo.setPosition(0.5);
     }
-
-    public void dropOff() {
-        angleMotorOne.setPosition(0);
-        angleMotorTwo.setPosition(0);
-    }
-
-    public class OpenClawRunnable implements Runnable {
-        @Override
-        public void run() {
-            open();
-        }
-    }
-    public Runnable OpenClawRunnable() { return new OpenClawRunnable();}
-
-
-
 }
+

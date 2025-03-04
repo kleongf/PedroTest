@@ -113,7 +113,7 @@ public class YellowRedPipeline extends OpenCvPipeline {
         if (!blockDetected) {
             return -1; // No block detected
         }
-        // i swapped these bcause camera is sideways
+        // i swapped these bcause camera is sideways but i shouldnt do that its kinda stupid
         return (width*1.4 > height) ? 0 : 1; // 1: Horizontal, 0: Vertical
     }
 }

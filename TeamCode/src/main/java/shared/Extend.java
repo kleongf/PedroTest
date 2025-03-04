@@ -2,24 +2,53 @@ package shared;
 
 import static shared.Constants.*;
 import com.arcrobotics.ftclib.controller.PIDController;
+import com.arcrobotics.ftclib.util.InterpLUT;
 import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 
 public class Extend {
     private PIDController controller;
-    // 0.025, 0.02, 0.0005
-    public static double p = 0.025, i = 0.02, d = 0.0005;
-//    public static double p = 0.03, i = 0.0, d = 0.0001;
-    public static double f = 0;
+    // public static double p = 0.03, i = 0.0, d = 0.0003;
+
+    public static double pTop = 0.012, dTop = 0.000, iTop = 0.0;
+    public static double pMiddle = 0.012, dMiddle = 0.00, iMiddle = 0.0;
+    public static double pBottom = 0.012, dBottom = 0.000, iBottom = 0.0;
+
+    private static double errorThreshold = 5;
+
+    private InterpLUT pCoefficients;
+    private InterpLUT dCoefficients;
+    private InterpLUT iCoefficients;
+
     public static int target = 0;
     private final DcMotorEx motorOne;
     private final DcMotorEx motorTwo;
     private boolean manual = false;
+    private double pwr = -0.6;
 
     public Extend(DcMotorEx motorOne, DcMotorEx motorTwo) {
-        controller = new PIDController(p, i, d);
-        controller.setPID(p, i, d);
+        pCoefficients = new InterpLUT();
+        dCoefficients = new InterpLUT();
+        iCoefficients = new InterpLUT();
+
+        pCoefficients.add(-30, pBottom);
+        pCoefficients.add(350, pMiddle);
+        pCoefficients.add(780, pTop);
+
+        dCoefficients.add(-30, dBottom);
+        dCoefficients.add(350, dMiddle);
+        dCoefficients.add(780, dTop);
+
+        iCoefficients.add(-30, iBottom);
+        iCoefficients.add(350, iMiddle);
+        iCoefficients.add(780, iTop);
+
+        pCoefficients.createLUT();
+        dCoefficients.createLUT();
+        iCoefficients.createLUT();
+
+        controller = new PIDController(pBottom, 0, dBottom);
         this.motorOne = motorOne;
         this.motorTwo = motorTwo;
         motorTwo.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -32,6 +61,10 @@ public class Extend {
         motorTwo.setDirection(DcMotor.Direction.REVERSE);
     }
 
+    public void setManualPower(double x) {
+        pwr = -x;
+    }
+
     public void setTarget(int t) {
         manual = false;
         if (t >= EXTEND_STOP_MAX) {
@@ -41,20 +74,38 @@ public class Extend {
 
     public int getTarget() { return target; }
 
+    private double clamp(double x) {
+        if (x >= 780) {
+            return 770;
+        } else if (x <= -20) {
+            return -20;
+        }
+        return x;
+    }
+
     public void loop() {
         if (!manual) {
             double armPos = motorTwo.getCurrentPosition();
+            double Kp = pCoefficients.get(clamp(armPos));
+            double Kd = dCoefficients.get(clamp(armPos));
+            double Ki = iCoefficients.get(clamp(armPos));
+
+            controller.setPID(Kp, Ki, Kd);
+
             double power = controller.calculate(armPos, target);
+
+
             motorTwo.setPower(-power);
             motorOne.setPower(-power);
+
         }
     }
 
     // -1 for back, 1 for forward
     public void manual(int d) {
         manual = true;
-        motorTwo.setPower(-0.6 * d);
-        motorTwo.setPower(-0.6 * d);
+        motorTwo.setPower(pwr * d);
+        motorTwo.setPower(pwr * d);
     }
 
     public int getCurrentPosition() {

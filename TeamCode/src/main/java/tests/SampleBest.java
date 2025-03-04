@@ -2,7 +2,9 @@ package tests;
 
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.pedropathing.pathgen.BezierPoint;
+import com.pedropathing.pathgen.PathCallback;
 import com.pedropathing.util.Constants;
+import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.pedropathing.follower.Follower;
@@ -14,7 +16,6 @@ import com.pedropathing.pathgen.PathChain;
 import com.pedropathing.pathgen.Point;
 import com.pedropathing.util.Timer;
 import com.qualcomm.robotcore.hardware.AnalogInput;
-import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.Servo;
 
@@ -22,26 +23,36 @@ import pedroPathing.constants.FConstants;
 import pedroPathing.constants.LConstants;
 import shared.Claw;
 import shared.Extend;
+import shared.Incrementor;
 import shared.Intake;
 import shared.Lift;
+import shared.TeleOpLift;
 import vision.YellowPipeline;
 import vision.YellowRedPipeline;
 
 import static shared.Constants.*;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
+import org.firstinspires.ftc.vision.VisionPortal;
 import org.openftc.easyopencv.OpenCvCamera;
 import org.openftc.easyopencv.OpenCvCameraFactory;
 import org.openftc.easyopencv.OpenCvCameraRotation;
 
-@Autonomous(name = "Autonomous Sample Runnable")
-public class RedSampleRunnable extends OpMode {
+import java.util.ArrayList;
+import java.util.List;
+
+@Autonomous(name = "Best Sample Auto")
+public class SampleBest extends OpMode {
+    private List<LynxModule> allHubs;
     private Follower follower;
-    private Timer pathTimer, actionTimer, opmodeTimer;
+    private Timer pathTimer, actionTimer;
     private int pathState;
 
+    private Timer loopTimer;
+    private ArrayList<Double> loopTimes;
+
     /** Start Pose of our robot */
-    private final Pose startPose = new Pose(134, 32, Math.toRadians(180));
+    private final Pose startPose = new Pose(135, 32, Math.toRadians(180));
 
     /** Scoring Pose of our robot. It is facing the submersible at a -45 degree (315 degree) angle. */
     private final Pose scorePose = new Pose(123.5, 18.5, Math.toRadians(135));
@@ -64,53 +75,20 @@ public class RedSampleRunnable extends OpMode {
     public DcMotorEx extendMotorTwo;
     public AnalogInput analogEncoder;
 
-    Lift lift;
+    private Incrementor incrementor = new Incrementor(4);
+
+    // TODO: test which lifts are better
+    TeleOpLift lift;
     Extend extend;
     Claw intake;
 
-    OpenCvCamera phoneCam;
+    // OpenCvCamera phoneCam;
     YellowRedPipeline yellowPipeline;
-
-    int x1 = 0;
-    int x2 = 0;
-    int x3 = 0;
-    int x4 = 0;
-
-    int index = 0;
 
     boolean prevDpadUp = false;
     boolean prevDpadDown = false;
     boolean prevDpadLeft = false;
     boolean prevDpadRight = false;
-
-    public void incrementValue(int d) {
-        switch (index) {
-            case 0:
-                x1 += d;
-                break;
-            case 1:
-                x2 += d;
-                break;
-            case 2:
-                x3 += d;
-                break;
-            case 3:
-                x4 += d;
-                break;
-        }
-    }
-
-    public void incrementIndex() {
-        if (index < 3) {
-            index++;
-        }
-    }
-
-    public void decrementIndex() {
-        if (index > 0) {
-            index--;
-        }
-    }
 
     Runnable openRunnable = new Runnable() {
         @Override
@@ -189,17 +167,24 @@ public class RedSampleRunnable extends OpMode {
         }
     };
 
+    Runnable intakeMidRunnable = new Runnable() {
+        @Override
+        public void run() {
+            intake.submersibleMid();
+        }
+    };
+
     Runnable extend1Runnable = new Runnable() {
         @Override
         public void run() {
-            extend.setTarget(220);
+            extend.setTarget(130);
         }
     };
 
     Runnable extend2Runnable = new Runnable() {
         @Override
         public void run() {
-            extend.setTarget(220);
+            extend.setTarget(130);
         }
     };
 
@@ -227,20 +212,30 @@ public class RedSampleRunnable extends OpMode {
             } else if (actionTimer.getElapsedTimeSeconds() < 0.5) {
                 intake.close();
             } else if (actionTimer.getElapsedTimeSeconds() < 0.8) {
-                lift.setTarget(ANGLE_ZERO + 6);
+                lift.setTarget(ANGLE_ZERO + 15);
                 intake.score();
             }
         }
     }
 
+//    public void prepareScore(PathChain pChain, int index) {
+//        pChain.setCallbacks(new ArrayList<PathCallback>(
+//                new PathCallback(0.1, retractRunnable, 0, index),
+//        ));
+//    }
+
     /** Build the paths for the auto (adds, for example, constant/linear headings while doing paths)
      * It is necessary to do this so that all the paths are built before the auto starts. **/
     public void buildPaths() {
+        int x1 = incrementor.getValue(0);
+        int x2 = incrementor.getValue(1);
+        int x3 = incrementor.getValue(2);
+        int x4 = incrementor.getValue(3);
 
-        Pose submersible1Pose = new Pose(72-(2*x1), 48, Math.toRadians(90));
-        Pose submersible2Pose = new Pose(72-(2*x2), 48, Math.toRadians(90));
-        Pose submersible3Pose = new Pose(72-(2*x3), 48, Math.toRadians(90));
-        Pose submersible4Pose = new Pose(72-(2*x4), 48, Math.toRadians(90));
+        Pose submersible1Pose = new Pose(72-(2*x1), 50, Math.toRadians(90));
+        Pose submersible2Pose = new Pose(72-(2*x2), 50, Math.toRadians(90));
+        Pose submersible3Pose = new Pose(72-(2*x3), 50, Math.toRadians(90));
+        Pose submersible4Pose = new Pose(72-(2*x4), 50, Math.toRadians(90));
 
         Point control1Point = new Point(72-(2*x1), 24, Point.CARTESIAN);
         Point control2Point = new Point(72-(2*x2), 24, Point.CARTESIAN);
@@ -253,7 +248,7 @@ public class RedSampleRunnable extends OpMode {
                 .addParametricCallback(0.1, liftUpRunnable)
                 .addParametricCallback(0.4, extendRunnable)
                 .addParametricCallback(0.9, intakeUpRunnable)
-                .addParametricCallback(0.98, resetTimerRunnable)
+                .addParametricCallback(0.99, resetTimerRunnable)
                 .build();
 
         grabPickup1 = follower.pathBuilder()
@@ -264,11 +259,11 @@ public class RedSampleRunnable extends OpMode {
                         )
                 )
                 .setLinearHeadingInterpolation(scorePose.getHeading(), pickup1Pose.getHeading())
-                .addParametricCallback(0.1, retractRunnable)
-                .addParametricCallback(0.4, liftDownDefaultRunnable)
-                .addParametricCallback(0.5, intakeDownRunnable)
+                .addParametricCallback(0.1, intakeMidRunnable)
+                .addParametricCallback(0.3, retractRunnable)
+                .addParametricCallback(0.5, liftDownRunnable)
                 .addParametricCallback(0.7, extend1Runnable)
-                .addParametricCallback(0.98, resetTimerRunnable)
+                .addParametricCallback(0.99, resetTimerRunnable)
                 .build();
 
         scorePickup1 = follower.pathBuilder()
@@ -283,7 +278,7 @@ public class RedSampleRunnable extends OpMode {
                 .addParametricCallback(0.3, liftUpRunnable)
                 .addParametricCallback(0.5, extendRunnable)
                 .addParametricCallback(0.9, intakeUpRunnable)
-                .addParametricCallback(0.98, resetTimerRunnable)
+                .addParametricCallback(0.99, resetTimerRunnable)
                 .build();
 
         grabPickup2= follower.pathBuilder()
@@ -294,11 +289,11 @@ public class RedSampleRunnable extends OpMode {
                         )
                 )
                 .setLinearHeadingInterpolation(scorePose.getHeading(), pickup2Pose.getHeading())
-                .addParametricCallback(0.1, retractRunnable)
-                .addParametricCallback(0.4, liftDownDefaultRunnable)
-                .addParametricCallback(0.5, intakeDownRunnable)
-                .addParametricCallback(0.6, extend2Runnable)
-                .addParametricCallback(0.98, resetTimerRunnable)
+                .addParametricCallback(0.1, intakeMidRunnable)
+                .addParametricCallback(0.3, retractRunnable)
+                .addParametricCallback(0.5, liftDownRunnable)
+                .addParametricCallback(0.7, extend2Runnable)
+                .addParametricCallback(0.99, resetTimerRunnable)
                 .build();
 
         scorePickup2 = follower.pathBuilder()
@@ -313,7 +308,7 @@ public class RedSampleRunnable extends OpMode {
                 .addParametricCallback(0.3, liftUpRunnable)
                 .addParametricCallback(0.5, extendRunnable)
                 .addParametricCallback(0.9, intakeUpRunnable)
-                .addParametricCallback(0.98, resetTimerRunnable)
+                .addParametricCallback(0.99, resetTimerRunnable)
                 .build();
 
         grabPickup3 = follower.pathBuilder()
@@ -324,11 +319,11 @@ public class RedSampleRunnable extends OpMode {
                         )
                 )
                 .setLinearHeadingInterpolation(scorePose.getHeading(), pickup3Pose.getHeading())
-                .addParametricCallback(0.1, retractRunnable)
-                .addParametricCallback(0.4, liftDownDefaultRunnable)
-                .addParametricCallback(0.5, intakeDownRunnable)
-                .addParametricCallback(0.6, extend3Runnable)
-                .addParametricCallback(0.98, resetTimerRunnable)
+                .addParametricCallback(0.1, intakeMidRunnable)
+                .addParametricCallback(0.3, retractRunnable)
+                .addParametricCallback(0.5, liftDownRunnable)
+                .addParametricCallback(0.7, extend3Runnable)
+                .addParametricCallback(0.99, resetTimerRunnable)
                 .build();
 
         scorePickup3 = follower.pathBuilder()
@@ -343,7 +338,7 @@ public class RedSampleRunnable extends OpMode {
                 .addParametricCallback(0.3, liftUpRunnable)
                 .addParametricCallback(0.5, extendRunnable)
                 .addParametricCallback(0.9, intakeUpRunnable)
-                .addParametricCallback(0.98, resetTimerRunnable)
+                .addParametricCallback(0.99, resetTimerRunnable)
                 .build();
 
         submersible1 = follower.pathBuilder()
@@ -431,7 +426,7 @@ public class RedSampleRunnable extends OpMode {
                 .addParametricCallback(0.3, liftUpRunnable)
                 .addParametricCallback(0.5, extendRunnable)
                 .addParametricCallback(0.9, intakeUpRunnable)
-                .addParametricCallback(0.98, resetTimerRunnable)
+                .addParametricCallback(0.99, resetTimerRunnable)
                 .build();
 
         scoreSubmersible3 = follower.pathBuilder()
@@ -447,10 +442,10 @@ public class RedSampleRunnable extends OpMode {
                 .addParametricCallback(0.3, liftUpRunnable)
                 .addParametricCallback(0.5, extendRunnable)
                 .addParametricCallback(0.9, intakeUpRunnable)
-                .addParametricCallback(0.98, resetTimerRunnable)
+                .addParametricCallback(0.99, resetTimerRunnable)
                 .build();
 
-        submersible4 = follower.pathBuilder()
+        scoreSubmersible4 = follower.pathBuilder()
                 .addPath(
                         new BezierCurve(
                                 new Point(submersible4Pose),
@@ -463,7 +458,7 @@ public class RedSampleRunnable extends OpMode {
                 .addParametricCallback(0.3, liftUpRunnable)
                 .addParametricCallback(0.5, extendRunnable)
                 .addParametricCallback(0.9, intakeUpRunnable)
-                .addParametricCallback(0.98, resetTimerRunnable)
+                .addParametricCallback(0.99, resetTimerRunnable)
                 .build();
 
     }
@@ -473,30 +468,32 @@ public class RedSampleRunnable extends OpMode {
                 follower.followPath(scorePreload, true);
                 setPathState(1);
                 break;
+                // TODO: first one may be more precise because conditions are different but check this
             case 1:
                 if(!follower.isBusy()) {
-                    if (actionTimer.getElapsedTimeSeconds() > 0.1) {
-                        intake.open();
+                    if (actionTimer.getElapsedTimeSeconds() > 0.8) {
                         follower.followPath(grabPickup1, true);
                         setPathState(2);
+                    } else if (actionTimer.getElapsedTimeSeconds() > 0.5) {
+                        intake.open();
                     }
                 }
                 break;
             case 2:
                 if (!follower.isBusy()) {
-                    if (actionTimer.getElapsedTimeSeconds() > 0.7) {
+                    if (actionTimer.getElapsedTimeSeconds() > 2) {
                         follower.followPath(scorePickup1, true);
                         setPathState(3);
-                    } else if (actionTimer.getElapsedTimeSeconds() > 0.4) {
+                    } else if (actionTimer.getElapsedTimeSeconds() > 1.5) {
                         intake.close();
-                    } else if (actionTimer.getElapsedTimeSeconds() > 0.1) {
-                        lift.setTarget(ANGLE_ZERO);
+                    } else if (actionTimer.getElapsedTimeSeconds() > 0.8) {
+                        intake.submersibleDown();
                     }
                 }
                 break;
             case 3:
                 if (!follower.isBusy()) {
-                    if (actionTimer.getElapsedTimeSeconds() > 0.1) {
+                    if (actionTimer.getElapsedTimeSeconds() > 0.5) {
                         intake.open();
                         follower.followPath(grabPickup2, true);
                         setPathState(4);
@@ -505,19 +502,19 @@ public class RedSampleRunnable extends OpMode {
                 break;
             case 4:
                 if (!follower.isBusy()) {
-                    if (actionTimer.getElapsedTimeSeconds() > 0.7) {
+                    if (actionTimer.getElapsedTimeSeconds() > 2) {
                         follower.followPath(scorePickup2, true);
                         setPathState(5);
-                    } else if (actionTimer.getElapsedTimeSeconds() > 0.4) {
+                    } else if (actionTimer.getElapsedTimeSeconds() > 1.5) {
                         intake.close();
-                    } else if (actionTimer.getElapsedTimeSeconds() > 0.1) {
-                        lift.setTarget(ANGLE_ZERO);
+                    } else if (actionTimer.getElapsedTimeSeconds() > 0.8) {
+                        intake.submersibleDown();
                     }
                 }
                 break;
             case 5:
                 if (!follower.isBusy()) {
-                    if (actionTimer.getElapsedTimeSeconds() > 0.1) {
+                    if (actionTimer.getElapsedTimeSeconds() > 0.5) {
                         intake.open();
                         follower.followPath(grabPickup3, true);
                         setPathState(6);
@@ -526,19 +523,19 @@ public class RedSampleRunnable extends OpMode {
                 break;
             case 6:
                 if (!follower.isBusy()) {
-                    if (actionTimer.getElapsedTimeSeconds() > 0.7) {
+                    if (actionTimer.getElapsedTimeSeconds() > 2) {
                         follower.followPath(scorePickup3, true);
                         setPathState(7);
-                    } else if (actionTimer.getElapsedTimeSeconds() > 0.4) {
+                    } else if (actionTimer.getElapsedTimeSeconds() > 1.5) {
                         intake.close();
-                    } else if (actionTimer.getElapsedTimeSeconds() > 0.1) {
-                        lift.setTarget(ANGLE_ZERO);
+                    } else if (actionTimer.getElapsedTimeSeconds() > 0.8) {
+                        intake.submersibleDown();
                     }
                 }
                 break;
             case 7:
                 if (!follower.isBusy()) {
-                    if (actionTimer.getElapsedTimeSeconds() > 0.1) {
+                    if (actionTimer.getElapsedTimeSeconds() > 0.5) {
                         intake.open();
                         follower.followPath(submersible1, true);
                         setPathState(8);
@@ -690,17 +687,28 @@ public class RedSampleRunnable extends OpMode {
     /** This is the main loop of the OpMode, it will run repeatedly after clicking "Play". **/
     @Override
     public void loop() {
+        for (LynxModule hub : allHubs) {
+            hub.clearBulkCache();
+        }
+
         follower.update();
         autonomousPathUpdate();
 
         lift.loop();
         extend.loop();
 
+        double currentTime = loopTimer.getElapsedTimeSeconds();
+        loopTimes.add(currentTime);
+        loopTimer.resetTimer();
+
         // Feedback to Driver Hub
         telemetry.addData("Busy", follower.isBusy());
-        telemetry.addData("Detected", yellowPipeline.isBlockDetected());
-        telemetry.addData("Orientation", yellowPipeline.getOrientation());
+//        telemetry.addData("Detected", yellowPipeline.isBlockDetected());
+//        telemetry.addData("Orientation", yellowPipeline.getOrientation());
         telemetry.addData("Timer", actionTimer.getElapsedTimeSeconds());
+        telemetry.addData("Loop Time", currentTime);
+        // TODO: CHECK THESE IN LOGCAT
+        System.out.println(currentTime);
         telemetry.addData("busy", follower.isBusy());
         telemetry.update();
     }
@@ -709,9 +717,9 @@ public class RedSampleRunnable extends OpMode {
     @Override
     public void init() {
         pathTimer = new Timer();
-        opmodeTimer = new Timer();
         actionTimer = new Timer();
-        opmodeTimer.resetTimer();
+        loopTimer = new Timer();
+        loopTimes = new ArrayList<>();
 
         liftMotorOne = hardwareMap.get(DcMotorEx.class, "liftMotorOne");
         liftMotorTwo = hardwareMap.get(DcMotorEx.class, "liftMotorTwo");
@@ -719,49 +727,70 @@ public class RedSampleRunnable extends OpMode {
         extendMotorOne = hardwareMap.get(DcMotorEx.class, "extendMotorOne");
         extendMotorTwo = hardwareMap.get(DcMotorEx.class, "extendMotorTwo");
 
-
-        lift = new Lift(liftMotorOne, liftMotorTwo, analogEncoder, extendMotorTwo);
-        extend = new Extend(extendMotorOne, extendMotorTwo);
         intake = new Claw(hardwareMap);
-
-        // TODO: Experiment with different manual power speeds to make it faster
-        // extend.setManualPower(0.7);
-
         Constants.setConstants(FConstants.class, LConstants.class);
         follower = new Follower(hardwareMap);
         follower.setStartingPose(startPose);
 
-        phoneCam = OpenCvCameraFactory.getInstance().createWebcam(hardwareMap.get(WebcamName.class, "Webcam 1"));
-        FtcDashboard.getInstance().startCameraStream(phoneCam, 0);
-        yellowPipeline = new YellowRedPipeline();
-        phoneCam.openCameraDeviceAsync(new OpenCvCamera.AsyncCameraOpenListener()
-        {
-            @Override
-            public void onOpened()
-            {
-                phoneCam.setPipeline(yellowPipeline);
-                phoneCam.startStreaming(640, 480, OpenCvCameraRotation.UPRIGHT);
-            }
+        // i need to instantiate all motors before lynx hub stuff
+        allHubs = hardwareMap.getAll(LynxModule.class);
+        for (LynxModule hub : allHubs) {
+            hub.setBulkCachingMode(LynxModule.BulkCachingMode.MANUAL);
+        }
 
-            @Override
-            public void onError(int errorCode)
-            {
-                telemetry.addLine("Error");
-            }
-        });
+        lift = new TeleOpLift(liftMotorOne, liftMotorTwo, analogEncoder, extendMotorTwo);
+        extend = new Extend(extendMotorOne, extendMotorTwo);
+
+        // TODO: Experiment with different manual power speeds to make it faster
+        // extend.setManualPower(0.7);
+
+        yellowPipeline = new YellowRedPipeline();
+
+        // as we are driving from the sub perhaps we want to enable this
+
+
+//        myVisionPortal = new VisionPortal.Builder()
+//                .setCamera(hardwareMap.get(WebcamName.class, "Webcam 1"))
+//                .addProcessor(myAprilTagProcessor)
+//                .setCameraResolution(new Size(640, 480))
+//                // NOW I CAN USE THE FAST FORMAT 90 fps yay
+//                .setStreamFormat(VisionPortal.StreamFormat.YUY2)
+//                .enableCameraMonitoring(true)
+//                .setAutoStopLiveView(true)
+//                .build();
+//
+//        phoneCam = OpenCvCameraFactory.getInstance().createWebcam(hardwareMap.get(WebcamName.class, "Webcam 1"));
+//        FtcDashboard.getInstance().startCameraStream(phoneCam, 0);
+//        phoneCam.openCameraDeviceAsync(new OpenCvCamera.AsyncCameraOpenListener()
+//        {
+//            @Override
+//            public void onOpened()
+//            {
+//                phoneCam.setPipeline(yellowPipeline);
+//                // TODO: MIGHT BE SIDEWAYS right?
+//                // phoneCam.startStreaming(640, 480, OpenCvCameraRotation.SIDEWAYS_LEFT);
+        // phoneCam.startStreaming(640, 480, OpenCvCameraRotation.UPRIGHT);
+//            }
+//
+//            @Override
+//            public void onError(int errorCode)
+//            {
+//                telemetry.addLine("Error");
+//            }
+//        });
     }
 
-    /** This method is called continuously after Init while waiting for "play". **/
+    /** Driver selects four positions to go to. **/
     @Override
     public void init_loop() {
         if (gamepad1.dpad_left && !prevDpadLeft) {
-            decrementIndex();
+            incrementor.decrementIndex();
         } else if (gamepad1.dpad_right && !prevDpadRight) {
-            incrementIndex();
+            incrementor.incrementIndex();
         } else if (gamepad1.dpad_up && !prevDpadUp) {
-            incrementValue(1);
+            incrementor.incrementValue();
         } else if (gamepad1.dpad_down && !prevDpadDown) {
-            incrementValue(-1);
+            incrementor.decrementValue();
         }
 
         prevDpadUp = gamepad1.dpad_up;
@@ -769,11 +798,11 @@ public class RedSampleRunnable extends OpMode {
         prevDpadRight = gamepad1.dpad_right;
         prevDpadDown = gamepad1.dpad_down;
 
-        telemetry.addData("x1", x1);
-        telemetry.addData("x2", x2);
-        telemetry.addData("x3", x3);
-        telemetry.addData("x4", x4);
-        telemetry.addData("editing", index+1);
+        telemetry.addData("x1", incrementor.getValue(0));
+        telemetry.addData("x2", incrementor.getValue(1));
+        telemetry.addData("x3", incrementor.getValue(2));
+        telemetry.addData("x4", incrementor.getValue(3));
+        telemetry.addData("editing", incrementor.getCurrentIndex()+1);
         telemetry.update();
 
     }
@@ -783,12 +812,21 @@ public class RedSampleRunnable extends OpMode {
     @Override
     public void start() {
         buildPaths();
-        opmodeTimer.resetTimer();
+        loopTimer.resetTimer();
         setPathState(0);
     }
 
     /** We do not use this because everything should automatically disable **/
     @Override
     public void stop() {
+        double avg = 0;
+        for (double x: loopTimes) {
+            avg += x;
+        }
+        avg = avg/loopTimes.size();
+
+        telemetry.addData("average loop time", avg);
     }
 }
+
+

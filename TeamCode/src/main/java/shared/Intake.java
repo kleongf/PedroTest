@@ -54,6 +54,5 @@ public class Intake {
         motorOne.setPosition(0.24);
         motorTwo.setPosition(0.24);
     }
-
 }
 

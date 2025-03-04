@@ -1,6 +1,7 @@
 package tests;
 
 import com.acmerobotics.dashboard.FtcDashboard;
+import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
@@ -15,24 +16,46 @@ import org.openftc.easyopencv.OpenCvCameraRotation;
 import org.openftc.easyopencv.OpenCvInternalCamera;
 import org.openftc.easyopencv.OpenCvPipeline;
 
+import vision.YCrCbPipelineRY;
 import vision.YellowPipeline;
 
 /*
  * This version of the internal camera example uses EasyOpenCV's interface to the
  * original Android camera API
  */
-@TeleOp
+@TeleOp(name = "OpenCV YCrCb Test")
 public class OpenCVTest extends LinearOpMode
 {
     OpenCvCamera phoneCam;
-    YellowPipeline yellowPipeline;
+    YCrCbPipelineRY yellowPipeline;
+
+    public static int lowerYellowY = 50;
+    public static int lowerYellowCr = 100;
+    public static int lowerYellowCb = 0;
+
+    public static int upperYellowY = 255;
+    public static int upperYellowCr = 255;
+    public static int upperYellowCb = 100;
+
+    public static int lowerRedY = 50;
+    public static int lowerRedCr = 180;
+    public static int lowerRedCb = 0;
+
+    public static int upperRedY = 255;
+    public static int upperRedCr = 255;
+    public static int upperRedCb = 140;
+
+    public static int minArea = 10000;
+
+    public static int X_MIN = 0, X_MAX = 640, Y_MIN = 0, Y_MAX = 480;
 
     @Override
     public void runOpMode()
     {
+        telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
         phoneCam = OpenCvCameraFactory.getInstance().createWebcam(hardwareMap.get(WebcamName.class, "Webcam 1"));
         FtcDashboard.getInstance().startCameraStream(phoneCam, 0);
-        yellowPipeline = new YellowPipeline();
+        yellowPipeline = new YCrCbPipelineRY();
         phoneCam.openCameraDeviceAsync(new OpenCvCamera.AsyncCameraOpenListener()
 
         {
@@ -68,13 +91,22 @@ public class OpenCVTest extends LinearOpMode
 
         while (opModeIsActive())
         {
+            yellowPipeline.setLOWER_YELLOW(lowerYellowY, lowerYellowCr, lowerYellowCb);
+            yellowPipeline.setUPPER_YELLOW(upperYellowY, upperYellowCr, upperYellowCb);
+            yellowPipeline.setLOWER_RED(lowerRedY, lowerRedCr, lowerRedCb);
+            yellowPipeline.setUPPER_RED(upperRedY, upperRedCr, upperRedCb);
+
+            yellowPipeline.setMIN_CONTOUR_AREA(minArea);
+
+            yellowPipeline.setX_MIN(X_MIN);
+            yellowPipeline.setX_MAX(X_MAX);
+            yellowPipeline.setY_MIN(Y_MIN);
+            yellowPipeline.setY_MAX(Y_MAX);
+
             telemetry.addData("Frame Count", phoneCam.getFrameCount());
             telemetry.addData("FPS", String.format("%.2f", phoneCam.getFps()));
-            telemetry.addData("Total frame time ms", phoneCam.getTotalFrameTimeMs());
-            telemetry.addData("Pipeline time ms", phoneCam.getPipelineTimeMs());
-            telemetry.addData("Overhead time ms", phoneCam.getOverheadTimeMs());
-            telemetry.addData("Theoretical max FPS", phoneCam.getCurrentPipelineMaxFps());
             telemetry.addData("Object In Center", yellowPipeline.isBlockDetected());
+            telemetry.addData("Orientation", yellowPipeline.getOrientation());
             telemetry.update();
         }
     }

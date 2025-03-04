@@ -114,7 +114,8 @@ public class RedSample extends OpMode {
                         actionTimer.reset();
                         liftState = LiftState.EXTEND_RETRACT;
                     } else {
-                        lift.setTarget(ANGLE_ZERO);
+                        // making default angle higher so that it can grab more easily
+                        lift.setTarget(ANGLE_ZERO+3);
                         actionTimer.reset();
                         liftState = LiftState.LIFT_DOWN;
                     }
@@ -150,7 +151,7 @@ public class RedSample extends OpMode {
 
             case EXTEND_RETRACT:
                 if (actionTimer.seconds() >= 0.2) {
-                    lift.setTarget(ANGLE_ZERO);
+                    lift.setTarget(ANGLE_ZERO+3);
                     actionTimer.reset();
                     liftState = LiftState.WAIT;
                 }
@@ -179,7 +180,8 @@ public class RedSample extends OpMode {
             case INTAKE_LIFT_DOWN:
                 if (intakeTimer.seconds() >= 0.2) {
                     if (extend.getCurrentPosition() > 0) {
-                        lift.setTarget(10-Math.toDegrees(Math.atan(1/(12+(extend.getCurrentPosition()/29.0)))));
+                        lift.setTarget(ANGLE_ZERO);
+                        // lift.setTarget(10-Math.toDegrees(Math.atan(1/(12+(extend.getCurrentPosition()/29.0)))));
                     } else {
                         // extension is at 0, needs to be lifted down to the minimum angle
                         lift.setTarget(ANGLE_STOP_MIN);

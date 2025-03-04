@@ -21,35 +21,37 @@ public class FConstants {
         FollowerConstants.rightRearMotorDirection = DcMotorSimple.Direction.REVERSE;
 
         // get mass in kg (REQUIRED)
-        // TODO: Change back if unnecessary
-        // increased by 4.4 lbs because of counterweight (was 13
-        FollowerConstants.mass = 15;
+        // increased by 2.5 lbs (1.1kg) because of counterweight (was 8)
+        FollowerConstants.mass = 9.2;
 
-        FollowerConstants.xMovement = 74.3369;
-        FollowerConstants.yMovement = 53.2528;
+        FollowerConstants.xMovement = 78;// 74.3369; // 78
+        FollowerConstants.yMovement = 63;// 53.2528; // 63
 
-        FollowerConstants.forwardZeroPowerAcceleration = -54.7083;
-        FollowerConstants.lateralZeroPowerAcceleration = -70.7978;
+        FollowerConstants.forwardZeroPowerAcceleration = -65; //-54.7083; // -65
+        FollowerConstants.lateralZeroPowerAcceleration = -83; //-70.7978; // -83
 
         // WE ARE HERE
 
-        FollowerConstants.translationalPIDFCoefficients.setCoefficients(0.15,0,0.02,0);
+
+        FollowerConstants.translationalPIDFCoefficients.setCoefficients(0.07,0,0.005,0);
         FollowerConstants.useSecondaryTranslationalPID = false;
         FollowerConstants.secondaryTranslationalPIDFCoefficients.setCoefficients(0.1,0,0.01,0); // Not being used, @see useSecondaryTranslationalPID
 
-        FollowerConstants.headingPIDFCoefficients.setCoefficients(0.7,0,0.1,0);
+        // p0.9, d0.2
+        FollowerConstants.headingPIDFCoefficients.setCoefficients(1,0,0.04,0);
         FollowerConstants.useSecondaryHeadingPID = false;
         FollowerConstants.secondaryHeadingPIDFCoefficients.setCoefficients(2,0,0.1,0); // Not being used, @see useSecondaryHeadingPID
 
-        FollowerConstants.drivePIDFCoefficients.setCoefficients(0.008,0,0.00005,0.6,0);
+        FollowerConstants.drivePIDFCoefficients.setCoefficients(0.01,0,0.00001,0.6,0);
         FollowerConstants.useSecondaryDrivePID = false;
         FollowerConstants.secondaryDrivePIDFCoefficients.setCoefficients(0.1,0,0,0.6,0); // Not being used, @see useSecondaryDrivePID
 
         // higher: more oscillation, faster breaking: default was 4
-        FollowerConstants.zeroPowerAccelerationMultiplier = 1;
-        FollowerConstants.centripetalScaling = 0.00001;
+        FollowerConstants.zeroPowerAccelerationMultiplier = 2;
+        FollowerConstants.centripetalScaling = 0.001;
 
-        FollowerConstants.pathEndTimeoutConstraint = 500;
+        // was 500 but im tryna reduce oscillation at end
+        FollowerConstants.pathEndTimeoutConstraint = 100;
         FollowerConstants.pathEndTValueConstraint = 0.995;
         FollowerConstants.pathEndVelocityConstraint = 0.1;
         FollowerConstants.pathEndTranslationalConstraint = 0.1;
