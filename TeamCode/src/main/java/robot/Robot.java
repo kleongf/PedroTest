@@ -289,20 +289,20 @@ public class Robot {
                 setRetractState(2);
                 break;
             case 2:
-                if (retractTimer.getElapsedTimeSeconds() > 0.2) {
+                if (retractTimer.getElapsedTimeSeconds() > 0.4) {
                     lift.setTarget(LIFT_DEFAULT);
                     setRetractState(3);
                 }
                 break;
             case 3:
-                if (retractTimer.getElapsedTimeSeconds() > 0.2) {
+                if (retractTimer.getElapsedTimeSeconds() > 0.4) {
                     extend.setTarget(EXTEND_DEFAULT);
                     setRetractState(4);
                 }
                 break;
             case 4:
                 if (retractTimer.getElapsedTimeSeconds() > 0.2) {
-                    setSubmersibleState(-1);
+                    setRetractState(-1);
                 }
         }
     }
@@ -414,12 +414,12 @@ public class Robot {
 
             // left trigger: extend to max
             if (gp1.left_trigger > 0.5 && pgp1.left_trigger < 0.5) {
-                extend.setTarget(EXTEND_MAX);
+                intake.toggleSpin();
             }
 
             // left bumper: toggle spin
             if (gp1.left_bumper && !pgp1.left_bumper) {
-                intake.toggleSpin();
+                extend.setTarget(EXTEND_MAX);
             }
 
             /* GAMEPAD 2 */
